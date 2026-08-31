@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>J/JK FGI-Popout</title>
+    <link rel="icon" href="favicon/standard.ico"/>
+
+
+
+    <link rel="stylesheet" href="data/css_main.css">
+
+    <link rel="stylesheet" href="data/css_informationDisplay/main.css">
+    <link rel="stylesheet" href="data/css_informationDisplay/simple_line_overview.css">
+    <link rel="stylesheet" href="data/css_informationDisplay/extended_line_overview.css">
+    <link rel="stylesheet" href="data/css_informationDisplay/exits_connections.css">
+    <link rel="stylesheet" href="data/css_informationDisplay/live_connections_overview.css">
+
+    <link rel="stylesheet" href="data/css_directionDisplay/main.css">
+    <link rel="stylesheet" href="data/css_directionDisplay/next_station.css">
+    <link rel="stylesheet" href="data/css_directionDisplay/destination.css">
+    <link rel="stylesheet" href="data/css_directionDisplay/fallback_layer.css">
+
+
+
+    <script src="data/js_directionDisplay.js" defer></script>
+
+    <!-- <script src="data/js_directionDisplay/js_directionDisplay.js" defer></script> -->
+    
+    <!-- NOTE: commented out script links are empty/unused; for better development with AI assistance the scripts are inline until finished. Clock script needs no attention. -->
+</head>
+
+<body style="background-color:#000000; overflow: hidden;">
+
+
+
+<div class="direction-display" style="left: 0px !important; zoom: 1 !important;">
+
+  <div class="direction-display-destination">
+    <img class="direction-display-destination-line-icon" src="visuals/service_icons/subway_lines/U7.svg" style="visibility: hidden;">
+    <img class="direction-display-destination-line-icon-suburban" src="visuals/service_icons/suburban_lines/S9.svg" style="visibility: hidden;">
+
+    <div class="direction-display-destination-row">
+      <div class="direction-display-destination-name"></div>
+    </div>
+
+  </div>
+
+
+
+  <div class="direction-display-next-station" style="display: none;">
+      <div class="direction-display-next-station-page-1">
+        <div class="direction-display-next-station-name">Mehringdamm</div>
+        <div class="direction-display-next-station-connections">
+          <div style="width: 154px; height: 176px; display: flex; justify-content: center; align-items: center;"><img src="visuals/interface/connections_figure.svg" style="width: 99px; flex-shrink: 0;"></div>
+          <div style="width: 260px; height: 154px; display: flex; justify-content: center; align-items: center;"><img src="visuals/service_icons/subway_lines/U6.svg" style="width: 260px; flex-shrink: 0;"></div>
+        </div>
+      </div>
+      
+      <div class="direction-display-next-station-page-2">
+        <div class="direction-display-next-station-connections">
+          <img>
+        </div>
+      </div>
+      
+      <div class="direction-display-next-station-exit-side" style="display: none;">
+        <img class="direction-display-next-station-exit-left" src="visuals/interface/direction_display/exit_left.svg">
+        <img class="direction-display-next-station-exit-right" src="visuals/interface/direction_display/exit_right.svg">
+      </div>
+  </div>
+
+
+
+  <img class="direction-display-fallback-layer" src="visuals/logo/BVG_borderless.svg">
+
+</div>
+
+
+
+</body>
+
+
+
+
+
+<script>
+  (function() {
+    // Check if it's June (month index 5, because January = 0)
+    if (new Date().getMonth() === 5) {
+      // 1. Swap the favicon
+      const faviconLink = document.querySelector('link[rel="icon"]');
+      if (faviconLink) {
+        faviconLink.href = 'favicon/pride.ico';
+      }
+
+      // 2. Swap the SVG image inside the label
+      const img = document.querySelector('#SimulatorIcon img');
+      if (img) {
+        img.src = 'visuals/logo/BVG_rainbow_borderless.svg';
+      }
+    }
+  })();
+</script>
+
+</html>

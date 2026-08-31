@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>J/JK FGI-Popout</title>
+    <link rel="icon" href="favicon/standard.ico"/>
+
+
+
+    <link rel="stylesheet" href="data/css_main.css">
+
+    <link rel="stylesheet" href="data/css_informationDisplay/main.css">
+    <link rel="stylesheet" href="data/css_informationDisplay/simple_line_overview.css">
+    <link rel="stylesheet" href="data/css_informationDisplay/extended_line_overview.css">
+    <link rel="stylesheet" href="data/css_informationDisplay/exits_connections.css">
+    <link rel="stylesheet" href="data/css_informationDisplay/live_connections_overview.css">
+
+    <link rel="stylesheet" href="data/css_directionDisplay/main.css">
+    <link rel="stylesheet" href="data/css_directionDisplay/next_station.css">
+    <link rel="stylesheet" href="data/css_directionDisplay/destination.css">
+    <link rel="stylesheet" href="data/css_directionDisplay/fallback_layer.css">
+
+
+
+    <script src="data/js_main.js" data-remote="1" defer></script>
+
+    <!-- <script src="data/js_informationDisplay/extended_line_basic_controllability.js" defer></script> -->
+    <script src="data/js_informationDisplay/clock.js" defer></script>
+
+    <!-- <script src="data/js_directionDisplay/js_directionDisplay.js" defer></script> -->
+    
+    <!-- NOTE: commented out script links are empty/unused; for better development with AI assistance the scripts are inline until finished. Clock script needs no attention. -->
+</head>
+
+<body style="background-color:#000000; overflow: hidden;">
+
+
+
+<div class="information-display" style="zoom: 1 !important;">
+
+<img class="information-display-fallback-layer" src="visuals/interface/information_display/fallback_layer/bvg_logo.svg" style="visibility: visible;">
+
+<img class="interface-overlay" src="visuals/interface/information_display/background/main_default_light.svg">
+
+<img class="information-display-line-icon" src="visuals/service_icons/subway_lines/U5.svg">
+
+
+
+
+
+<div id="information-display-line-simple" style="visibility: visible;">
+
+<div class="interface-overlay" id="line-simple" style="z-index: 20;"></div>
+
+<div class="information-display-clock">00:00</div>
+
+
+
+<div class="information-display-line-simple-station">
+  
+  <div class="information-display-line-simple-station-name" style="left: 299px; top: 93px; font-size: 120px;
+  ">Museumsinsel</div>
+  <div class="information-display-line-simple-station-additional-name" style="left: 299px; top: 188px; font-size: 32px;
+  "></div>
+
+<div class="information-display-line-simple-station-connections" style="top: 118px;">
+  <div class="information-display-line-simple-station-connections-rows" style="display: flex;">
+    <div style="width: 31px; height: 31px; display: flex; justify-content: center; align-items: center;"><img src="visuals/service_icons/fernverkehr.svg" style="width: 35px; flex-shrink: 0;"></div>
+    <div style="width: 30px; height: 31px; display: flex; justify-content: center; align-items: center;"><img src="visuals/service_icons/bahn.svg" style="width: 42px; flex-shrink: 0;"></div>
+    <div style="width: 31px; height: 31px; display: flex; justify-content: center; align-items: center;"><img src="visuals/service_icons/sbahn.svg" style="width: 35px; flex-shrink: 0;"></div>
+  </div>
+  <div class="information-display-line-simple-station-connections-rows" style="display: none;">
+  </div>
+</div>
+</div>
+
+<div class="information-display-line-simple-station">
+  
+  <div class="information-display-line-simple-station-name" style="left: 299px; top: 250px; font-size: 60px;
+  ">Rotes Rathaus</div>
+  <div class="information-display-line-simple-station-additional-name" style="left: 300px; top: 299px; font-size: 24px;
+  "></div>
+
+<div class="information-display-line-simple-station-connections" style="top: 245px;">
+  <div class="information-display-line-simple-station-connections-rows" style="display: flex;">
+    <div style="width: 30px; height: 31px; display: flex; justify-content: center; align-items: center;"><img src="visuals/service_icons/bahn.svg" style="width: 42px; flex-shrink: 0;"></div>
+    <div style="width: 31px; height: 31px; display: flex; justify-content: center; align-items: center;"><img src="visuals/service_icons/flughafen.svg" style="width: 35px; flex-shrink: 0;"></div>
+  </div>
+  <div class="information-display-line-simple-station-connections-rows" style="display: none;">
+  </div>
+</div>
+</div>
+
+<div class="information-display-line-simple-station">
+  
+  <div class="information-display-line-simple-station-name" style="left: 299px; top: 354px; font-size: 60px;
+  ">Alexanderplatz</div>
+  <div class="information-display-line-simple-station-additional-name" style="left: 300px; top: 404px; font-size: 24px;
+  "></div>
+
+<div class="information-display-line-simple-station-connections" style="top: 349px;">
+  <div class="information-display-line-simple-station-connections-rows" style="display: flex;">
+    <div style="width: 30px; height: 31px; display: flex; justify-content: center; align-items: center;"><img src="visuals/service_icons/bahn.svg" style="width: 42px; flex-shrink: 0;"></div>
+    <div style="width: 31px; height: 31px; display: flex; justify-content: center; align-items: center;"><img src="visuals/service_icons/sbahn.svg" style="width: 35px; flex-shrink: 0;"></div>
+  </div>
+  <div class="information-display-line-simple-station-connections-rows" style="display: flex;">
+    <div style="width: 52px; height: 31px; display: flex; justify-content: center; align-items: center;"><img src="visuals/service_icons/subway_lines/U2.svg" style="width: 52px; flex-shrink: 0;"></div>
+    <div style="width: 52px; height: 31px; display: flex; justify-content: center; align-items: center;"><img src="visuals/service_icons/subway_lines/U8.svg" style="width: 52px; flex-shrink: 0;"></div>
+  </div>
+</div>
+</div>
+</div>
+
+<div id="information-display-exits-connections" style="visibility: hidden;">
+
+<div class="information-display-exits-connections-exitrow-background"></div>
+
+<div class="information-display-exits-connections-exitrow-left">
+  <img src="visuals/interface/information_display/exit_details/exit_left.svg" class="information-display-exits-connections-exitrow-item">
+  <img src="visuals/interface/information_display/exit_details/info_desk.svg" class="information-display-exits-connections-exitrow-item">
+  <img src="visuals/interface/information_display/exit_details/WC.svg" class="information-display-exits-connections-exitrow-item">
+
+</div>
+
+<div class="information-display-exits-connections-exitrow-center">
+  <img src="visuals/interface/information_display/exit_details/exit_up.svg" class="information-display-exits-connections-exitrow-item">
+  <div class="information-display-exits-connections-exitrow-item-textbox-double">
+    <div class="information-display-exits-connections-exitrow-item-textbox-text">A - Q</div>
+  </div>
+
+</div>
+
+<div class="information-display-exits-connections-exitrow-right">
+  <img src="visuals/interface/information_display/exit_details/exit_right.svg" class="information-display-exits-connections-exitrow-item">
+  <div>
+    <img src="visuals/interface/information_display/exit_details/lift_number.svg" class="information-display-exits-connections-exitrow-item">
+    <div class="information-display-exits-connections-exitrow-elevator-number">2</div>
+  </div>
+
+</div>
+
+
+
+<div class="information-display-exits-connections-connectionrow-left-arrow">←</div>
+<div class="information-display-exits-connections-connectionrow-right-arrow">→</div>
+
+<div class="information-display-exits-connections-connectionrow-left">
+  <div style="width: 53px; height: 52px; display: flex; justify-content: center; align-items: center;"><img src="visuals/service_icons/bahn.svg" style="width: 71px; flex-shrink: 0;"></div>
+  <div style="width: 52px; height: 52px; display: flex; justify-content: center; align-items: center;"><img src="visuals/service_icons/bus.svg" style="width: 58px; flex-shrink: 0;"></div>
+
+</div>
+
+<div class="information-display-exits-connections-connectionrow-center">
+  <div style="width: 52px; height: 52px; display: flex; justify-content: center; align-items: center;"><img src="visuals/service_icons/jelbi.svg" style="width: 52px; flex-shrink: 0;"></div>
+  <div style="width: 52px; height: 52px; display: flex; justify-content: center; align-items: center;"><img src="visuals/service_icons/flughafen.svg" style="width: 58px; flex-shrink: 0;"></div>
+
+</div>
+
+<div class="information-display-exits-connections-connectionrow-right">
+  <div style="width: 52px; height: 52px; display: flex; justify-content: center; align-items: center;"><img src="visuals/service_icons/tram.svg" style="width: 52px; flex-shrink: 0;"></div>
+  <div style="width: 52px; height: 52px; display: flex; justify-content: center; align-items: center;"><img src="visuals/service_icons/bus.svg" style="width: 58px; flex-shrink: 0;"></div>
+
+</div>
+
+
+
+<div class="information-display-exits-connections-station-name">Hauptbahnhof</div>
+
+<div class="information-display-exits-connections-station-additional-name">Central Station</div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+<div id="information-display-line-extended" style="visibility: visible;">
+
+<div class="information-display-line-extended-line-number">M17</div>
+<div class="information-display-line-extended-arrow">▸</div>
+<div class="information-display-line-extended-destination">Hauptbahnhof</div>
+
+
+
+<div class="interface-overlay" id="line-extended" style="z-index: 20;"></div>
+
+<div class="information-display-line-extended-station" style="
+  left: 144px;
+  ">
+  <div class="information-display-line-extended-station-name" style="
+  color: #8c8c8c;
+  font-weight: 900;
+  ">Hauptbahnhof</div>
+  <div class="information-display-line-extended-station-additional-name" style="
+  color: #8c8c8c;
+  ">Central Station</div>
+
+  <div class="information-display-line-extended-station-connections" style="top: 31px;">
+    <div style="width: 15px; height: 15px; display: flex; justify-content: center; align-items: center;"><img src="visuals/service_icons/grayscale/fernverkehr.svg" style="width: 17px; flex-shrink: 0;"></div>
+    <div style="width: 15px; height: 15px; display: flex; justify-content: center; align-items: center;"><img src="visuals/service_icons/grayscale/bahn.svg" style="width: 21px; flex-shrink: 0;"></div>
+  </div>
+  <div class="information-display-line-extended-station-connections" style="top: 58px;">
+    <div style="width: 15px; height: 15px; display: flex; justify-content: center; align-items: center;"><img src="visuals/service_icons/grayscale/sbahn.svg" style="width: 17px; flex-shrink: 0;"></div>
+  </div>
+  <div class="information-display-line-extended-station-connections" style="top: 85px;">
+    <div style="width: 15px; height: 15px; display: flex; justify-content: center; align-items: center;"><img src="visuals/service_icons/grayscale/sbahn.svg" style="width: 17px; flex-shrink: 0;"></div>
+  </div>
+</div>
+
+<div class="information-display-line-extended-station" style="
+  left: 393px;
+  ">
+  <div class="information-display-line-extended-station-name" style="
+  color: #8c8c8c;
+  font-weight: bold;
+  ">Bundestag</div>
+  <div class="information-display-line-extended-station-additional-name" style="
+  color: #8c8c8c;
+  "></div>
+
+  <div class="information-display-line-extended-station-connections" style="top: 31px;">
+  </div>
+  <div class="information-display-line-extended-station-connections" style="top: 58px;">
+  </div>
+  <div class="information-display-line-extended-station-connections" style="top: 85px;">
+  </div>
+</div>
+
+<div class="information-display-line-extended-station" style="
+  left: 641px;
+  ">
+  <div class="information-display-line-extended-station-name" style="
+  color: #8c8c8c;
+  font-weight: bold;
+  ">Brandenburger Tor</div>
+  <div class="information-display-line-extended-station-additional-name" style="
+  color: #8c8c8c;
+  "></div>
+
+  <div class="information-display-line-extended-station-connections" style="top: 31px;">
+  </div>
+  <div class="information-display-line-extended-station-connections" style="top: 58px;">
+  </div>
+  <div class="information-display-line-extended-station-connections" style="top: 85px;">
+  </div>
+</div>
+
+<div class="information-display-line-extended-station" style="
+  left: 890px;
+  ">
+  <div class="information-display-line-extended-station-name" style="
+  color: #8c8c8c;
+  font-weight: bold;
+  ">Unter den Linden</div>
+  <div class="information-display-line-extended-station-additional-name" style="
+  color: #8c8c8c;
+  "></div>
+
+  <div class="information-display-line-extended-station-connections" style="top: 31px;">
+  </div>
+  <div class="information-display-line-extended-station-connections" style="top: 58px;">
+  </div>
+  <div class="information-display-line-extended-station-connections" style="top: 85px;">
+  </div>
+</div>
+
+<div class="information-display-line-extended-station" style="
+  left: 1139px;
+  ">
+  <div class="information-display-line-extended-station-name" style="
+  color: #252525;
+  font-weight: 900;
+  ">Museumsinsel</div>
+  <div class="information-display-line-extended-station-additional-name" style="
+  color: #252525;
+  "></div>
+
+  <div class="information-display-line-extended-station-connections" style="top: 31px;">
+  </div>
+  <div class="information-display-line-extended-station-connections" style="top: 58px;">
+  </div>
+  <div class="information-display-line-extended-station-connections" style="top: 85px;">
+  </div>
+</div>
+
+<div class="information-display-line-extended-station" style="
+  left: 1387px;
+  ">
+  <div class="information-display-line-extended-station-name" style="
+  color: #252525;
+  font-weight: bold;
+  ">Rotes Rathaus</div>
+  <div class="information-display-line-extended-station-additional-name" style="
+  color: #252525;
+  "></div>
+
+  <div class="information-display-line-extended-station-connections" style="top: 31px;">
+  </div>
+  <div class="information-display-line-extended-station-connections" style="top: 58px;">
+  </div>
+  <div class="information-display-line-extended-station-connections" style="top: 85px;">
+  </div>
+</div>
+
+<div class="information-display-line-extended-station" style="
+  left: 1636px;
+  ">
+  <div class="information-display-line-extended-station-name" style="
+  color: #252525;
+  font-weight: 900;
+  ">Alexanderplatz</div>
+  <div class="information-display-line-extended-station-additional-name" style="
+  color: #252525;
+  "></div>
+
+  <div class="information-display-line-extended-station-connections" style="top: 31px;">
+  </div>
+  <div class="information-display-line-extended-station-connections" style="top: 58px;">
+  </div>
+  <div class="information-display-line-extended-station-connections" style="top: 85px;">
+  </div>
+</div>
+</div>
+
+
+
+
+
+<div id="information-display-live-connections" style="visibility: hidden;">
+
+<img class="information-display-live-connections-grid" src="visuals/interface/information_display/connections_overview/grid_default_light.svg">
+
+<div class="information-display-live-connections-header">Anschlüsse <span style="font-weight: normal;">•</span> <span style="font-style: italic;">Connections</span></div>
+
+<div class="information-display-live-connections-page-indicator-row">
+  <img class="information-display-live-connections-page-indicator" src="visuals/interface/information_display/connections_overview/page_indicator_1_light.svg">
+  <img class="information-display-live-connections-page-indicator" src="visuals/interface/information_display/connections_overview/page_indicator_0_light.svg">
+  <img class="information-display-live-connections-page-indicator" src="visuals/interface/information_display/connections_overview/page_indicator_0_light.svg">
+</div>
+
+
+
+<div class="information-display-live-connections-service" style="left: 0px; top: 580px;">
+  
+  <div class="information-display-live-connections-service-regional-box"></div>
+  <div class="information-display-live-connections-service-regional-line">RB12</div>
+
+  <img class="information-display-live-connections-service-icon" src="visuals/service_icons/subway_lines/U9.svg">
+  <div class="information-display-live-connections-service-line">Bleh</div>
+  <div class="information-display-live-connections-service-destination">S Spandau Bhf</div>
+  <div class="information-display-live-connections-service-time">2'</div>
+
+</div>
+
+<div class="information-display-live-connections-service" style="left: 0px; top: 662px;">
+  
+  <div class="information-display-live-connections-service-regional-box"></div>
+  <div class="information-display-live-connections-service-regional-line">RB12</div>
+
+  <img class="information-display-live-connections-service-icon" src="visuals/service_icons/subway_lines/U9.svg">
+  <div class="information-display-live-connections-service-line">Bleh</div>
+  <div class="information-display-live-connections-service-destination">S Spandau Bhf</div>
+  <div class="information-display-live-connections-service-time">2'</div>
+
+</div>
+
+<div class="information-display-live-connections-service" style="left: 0px; top: 746px;">
+  
+  <div class="information-display-live-connections-service-regional-box"></div>
+  <div class="information-display-live-connections-service-regional-line">RB12</div>
+
+  <img class="information-display-live-connections-service-icon" src="visuals/service_icons/subway_lines/U9.svg">
+  <div class="information-display-live-connections-service-line">Bleh</div>
+  <div class="information-display-live-connections-service-destination">S Spandau Bhf</div>
+  <div class="information-display-live-connections-service-time">2'</div>
+
+</div>
+
+<div class="information-display-live-connections-service" style="left: 0px; top: 830px;">
+  
+  <div class="information-display-live-connections-service-regional-box"></div>
+  <div class="information-display-live-connections-service-regional-line">RB12</div>
+
+  <img class="information-display-live-connections-service-icon" src="visuals/service_icons/subway_lines/U9.svg">
+  <div class="information-display-live-connections-service-line">Bleh</div>
+  <div class="information-display-live-connections-service-destination">S Spandau Bhf</div>
+  <div class="information-display-live-connections-service-time">2'</div>
+
+</div>
+
+<div class="information-display-live-connections-service" style="left: 0px; top: 914px;">
+  
+  <div class="information-display-live-connections-service-regional-box"></div>
+  <div class="information-display-live-connections-service-regional-line">RB12</div>
+
+  <img class="information-display-live-connections-service-icon" src="visuals/service_icons/subway_lines/U9.svg">
+  <div class="information-display-live-connections-service-line">Bleh</div>
+  <div class="information-display-live-connections-service-destination">S Spandau Bhf</div>
+  <div class="information-display-live-connections-service-time">2'</div>
+
+</div>
+
+<div class="information-display-live-connections-service" style="left: 0px; top: 998px;">
+  
+  <div class="information-display-live-connections-service-regional-box"></div>
+  <div class="information-display-live-connections-service-regional-line">RB12</div>
+
+  <img class="information-display-live-connections-service-icon" src="visuals/service_icons/subway_lines/U9.svg">
+  <div class="information-display-live-connections-service-line">Bleh</div>
+  <div class="information-display-live-connections-service-destination">S Spandau Bhf</div>
+  <div class="information-display-live-connections-service-time">2'</div>
+
+</div>
+
+<div class="information-display-live-connections-service" style="left: 960px; top: 580px;">
+  
+  <div class="information-display-live-connections-service-regional-box"></div>
+  <div class="information-display-live-connections-service-regional-line">RB12</div>
+
+  <img class="information-display-live-connections-service-icon" src="visuals/service_icons/subway_lines/U9.svg">
+  <div class="information-display-live-connections-service-line">Bleh</div>
+  <div class="information-display-live-connections-service-destination">S Spandau Bhf</div>
+  <div class="information-display-live-connections-service-time">2'</div>
+
+</div>
+
+<div class="information-display-live-connections-service" style="left: 960px; top: 662px;">
+  
+  <div class="information-display-live-connections-service-regional-box"></div>
+  <div class="information-display-live-connections-service-regional-line">RB12</div>
+
+  <img class="information-display-live-connections-service-icon" src="visuals/service_icons/subway_lines/U9.svg">
+  <div class="information-display-live-connections-service-line">Bleh</div>
+  <div class="information-display-live-connections-service-destination">S Spandau Bhf</div>
+  <div class="information-display-live-connections-service-time">2'</div>
+
+</div>
+
+<div class="information-display-live-connections-service" style="left: 960px; top: 746px;">
+  
+  <div class="information-display-live-connections-service-regional-box"></div>
+  <div class="information-display-live-connections-service-regional-line">RB12</div>
+
+  <img class="information-display-live-connections-service-icon" src="visuals/service_icons/subway_lines/U9.svg">
+  <div class="information-display-live-connections-service-line">Bleh</div>
+  <div class="information-display-live-connections-service-destination">S Spandau Bhf</div>
+  <div class="information-display-live-connections-service-time">2'</div>
+
+</div>
+
+<div class="information-display-live-connections-service" style="left: 960px; top: 830px;">
+  
+  <div class="information-display-live-connections-service-regional-box"></div>
+  <div class="information-display-live-connections-service-regional-line">RB12</div>
+
+  <img class="information-display-live-connections-service-icon" src="visuals/service_icons/subway_lines/U9.svg">
+  <div class="information-display-live-connections-service-line">Bleh</div>
+  <div class="information-display-live-connections-service-destination">S Spandau Bhf</div>
+  <div class="information-display-live-connections-service-time">2'</div>
+
+</div>
+
+<div class="information-display-live-connections-service" style="left: 960px; top: 914px;">
+  
+  <div class="information-display-live-connections-service-regional-box"></div>
+  <div class="information-display-live-connections-service-regional-line">RB12</div>
+
+  <img class="information-display-live-connections-service-icon" src="visuals/service_icons/subway_lines/U9.svg">
+  <div class="information-display-live-connections-service-line">Bleh</div>
+  <div class="information-display-live-connections-service-destination">S Spandau Bhf</div>
+  <div class="information-display-live-connections-service-time">2'</div>
+
+</div>
+
+<div class="information-display-live-connections-service" style="left: 960px; top: 998px;">
+  
+  <div class="information-display-live-connections-service-regional-box"></div>
+  <div class="information-display-live-connections-service-regional-line">RB12</div>
+
+  <img class="information-display-live-connections-service-icon" src="visuals/service_icons/subway_lines/U9.svg">
+  <div class="information-display-live-connections-service-line">Bleh</div>
+  <div class="information-display-live-connections-service-destination">S Spandau Bhf</div>
+  <div class="information-display-live-connections-service-time">2'</div>
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+</div>
+
+
+
+</body>
+
+<script>
+  (function() {
+    // Check if it's June (month index 5, because January = 0)
+    if (new Date().getMonth() === 5) {
+      // 1. Swap the favicon
+      const faviconLink = document.querySelector('link[rel="icon"]');
+      if (faviconLink) {
+        faviconLink.href = 'favicon/pride.ico';
+      }
+    }
+  })();
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const ch = new BroadcastChannel('j-jk-fgi-broadcast');
+    const urlParams = new URLSearchParams(location.search);
+    const myId = urlParams.get('id') || 'unknown';
+    document.title = 'J/JK FGI-Popout - ID: ' + myId;
+
+    let configLocked = false;
+    let routeApplied = false;
+    let explicitReset = false;
+
+    let pendingState = null;
+    let pendingRouteUpdate = null;
+    let pendingLiveConnections = null;
+    let pendingHideLive = false;
+
+    ch.onmessage = (e) => {
+        const Sim = window.Simulator;
+        if (!Sim) {
+            // Queue messages that arrive before Simulator is ready
+            if (e.data.type === 'initialState' && e.data.id === myId) {
+                pendingState = e.data.state;
+            }
+            if (e.data.type === 'routeUpdate') {
+                pendingRouteUpdate = e.data.state;
+            }
+            if (e.data.type === 'liveConnections') {
+                pendingLiveConnections = e.data.pages;
+            }
+            if (e.data.type === 'hideLiveConnections') {
+                pendingHideLive = true;
+            }
+            return;
+        }
+        handleMessage(e.data);
+    };
+
+    function handleMessage(msg) {
+        const Sim = window.Simulator;
+
+        if (msg.type === 'initialState' && msg.id === myId) {
+            const s = msg.state;
+
+            if (!configLocked && s.config) {
+                Sim.applyConfig(s.config);
+                configLocked = true;
+            }
+
+            // Apply route only if not already applied and not explicitly reset
+            if (s.line && !routeApplied && !explicitReset) {
+                Sim.applyRemoteRoute(s.lineFile || s.line, s.start, s.end, s.skip, s.currentIdx);
+                routeApplied = true;
+                explicitReset = false;
+            }
+            return;
+        }
+
+        if (msg.type === 'routeUpdate') {
+            const s = msg.state;
+
+            // Ignore empty routeUpdate unless it follows an explicit reset
+            if (!s || !s.line) {
+                if (explicitReset) {
+                    Sim.resetRoute();
+                    explicitReset = false;
+                    routeApplied = false;
+                }
+                return;
+            }
+
+            // Avoid duplicate route updates for the same route/state
+            const current = Sim.getRouteState();
+            if (current &&
+                current.line === s.line &&
+                current.start === s.start &&
+                current.end === s.end &&
+                current.skip === s.skip &&
+                current.currentIdx === s.currentIdx) {
+                return;
+            }
+
+            Sim.applyRemoteRoute(s.lineFile || s.line, s.start, s.end, s.skip, s.currentIdx);
+            routeApplied = true;
+            explicitReset = false;
+            return;
+        }
+
+        if (msg.type === 'forward') {
+            Sim.moveForward();
+        } else if (msg.type === 'backward') {
+            Sim.moveBackward();
+        } else if (msg.type === 'arrival') {
+            if (msg.via) Sim.setCurrentVia(msg.via);
+            Sim.shortBeforeStop();
+        } else if (msg.type === 'doorRelease') {
+            Sim.doorRelease();
+        } else if (msg.type === 'doorLock') {
+            Sim.doorLock();
+        } else if (msg.type === 'removeScript') {
+            explicitReset = true;
+            routeApplied = false;
+            Sim.resetRoute();
+        } else if (msg.type === 'appearanceChange') {
+            Sim.applyAppearance(msg.appearance);
+        } else if (msg.type === 'liveConnections') {
+            Sim.showLiveConnectionsRemote(msg.pages);
+        } else if (msg.type === 'hideLiveConnections') {
+            if (typeof Sim.hideLiveConnections === 'function') {
+                Sim.hideLiveConnections();
+            }
+        } else if (msg.type === 'configUpdate') {
+            if (msg.config) {
+                if (typeof msg.config.showLiveConnectionsOverview === 'boolean') {
+                    Sim.applyConfigToggle(msg.config.showLiveConnectionsOverview);
+                }
+                if (typeof msg.config.combinedLineDesign === 'string') {
+                    Sim.applyCombinedLineDesign(msg.config.combinedLineDesign);
+                }
+            }
+        }
+    }
+
+    const checkInterval = setInterval(function () {
+        if (window.Simulator) {
+            clearInterval(checkInterval);
+
+            // Process pending messages in a sensible order
+            if (pendingState) {
+                handleMessage({ type: 'initialState', state: pendingState, id: myId });
+                pendingState = null;
+            }
+            if (pendingRouteUpdate) {
+                handleMessage({ type: 'routeUpdate', state: pendingRouteUpdate });
+                pendingRouteUpdate = null;
+            }
+            if (pendingHideLive) {
+                handleMessage({ type: 'hideLiveConnections' });
+                pendingHideLive = false;
+            }
+            if (pendingLiveConnections) {
+                handleMessage({ type: 'liveConnections', pages: pendingLiveConnections });
+                pendingLiveConnections = null;
+            }
+
+            setTimeout(() => {
+                ch.postMessage({ type: 'requestState', id: myId });
+            }, 200);
+        }
+    }, 50);
+});
+</script>
+
+</html>

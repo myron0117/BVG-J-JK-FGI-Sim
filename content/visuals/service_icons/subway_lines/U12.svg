@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="151.4" height="89.7" viewBox="0 0 1514 897">
+	<title>Berlin-Brandenburg transit icons - U-Bahn Linie U12</title>
+	<path fill="#7dad4c" d="M0,0h1514v897H0z"/>
+	<path fill="#da421e" d="M0,897h1514V0z"/>
+	<path fill="#fff" d="M561,535q0 60-16 103t-44.5 70.5t-68 40t-87.5 12.5q-47 0-87-12.5t-68.5-40t-44.5-70.5t-16-103v-382h116v345q0 78 21.5 123.5t78.5 45.5q56 0 77-45.5t21-123.5v-345h118v382zM913,754h-116v-470l-76 79l-55-82l151-128h96v601zM1363,754h-345v-99q106-105 161.5-185t55.5-148q0-39-23-61.5t-57-22.5q-35 0-65 11t-50 25l-12-96q35-17 75.5-25.5t77.5-8.5q86 0 129 42.5t43 114.5q0 58-22.5 110.5t-55.5 97.5t-70 83t-66 66h224v96z"/>
+</svg>

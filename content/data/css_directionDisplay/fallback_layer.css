@@ -1,0 +1,9 @@
+.direction-display-fallback-layer
+{
+  position: absolute;
+  left: 0px;
+  top: 24px;
+  width: 1920px;
+  height: 202px;
+  visibility: visible;
+}

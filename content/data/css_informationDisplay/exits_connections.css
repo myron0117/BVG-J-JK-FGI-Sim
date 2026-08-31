@@ -1,0 +1,215 @@
+.information-display-exits-connections-exitrow-background
+{
+  position: absolute;
+  left:0px;
+  top: 0px;
+  width: 1920px;
+  height: 76px;
+  background-color: #f0d722;
+  z-index: 20;
+}
+
+.information-display-exits-connections-exitrow-left
+{
+  position: absolute;
+  display: flex;
+  left: 0px;
+  top: 0px;
+  width: 1920px;
+  height: 76px;
+  justify-content: flex-start;
+  gap: 4px;
+}
+
+.information-display-exits-connections-exitrow-center
+{
+  position: absolute;
+  display: flex;
+  left: 0px;
+  top: 0px;
+  width: 1920px;
+  height: 76px;
+  justify-content: center;
+  gap: 4px;
+}
+
+.information-display-exits-connections-exitrow-right
+{
+  position: absolute;
+  display: flex;
+  left: 0px;
+  top: 0px;
+  width: 1920px;
+  height: 76px;
+  justify-content: flex-start;
+  flex-direction: row-reverse;
+  gap: 4px;
+}
+
+.information-display-exits-connections-exitrow-item
+{
+  position: relative;
+  display: flex;
+  height: 76px;
+  outline: 4px solid #ffffff;
+  z-index: 50;
+}
+
+.information-display-exits-connections-exitrow-item-textbox-single
+{
+  position: relative;
+  display: flex;
+  width: 76px;
+  height: 76px;
+  background-color: #252525;
+  outline: 4px solid #ffffff;
+  justify-content: center;
+  z-index: 50;
+}
+
+.information-display-exits-connections-exitrow-item-textbox-double
+{
+  position: relative;
+  display: flex;
+  width: 152px;
+  height: 76px;
+  background-color: #252525;
+  outline: 4px solid #ffffff;
+  justify-content: center;
+  z-index: 50;
+}
+
+.information-display-exits-connections-exitrow-item-textbox-text
+{
+  position: relative;
+  display: flex;
+  top: 3px;
+  font-family: TransitPro;
+  font-weight: bold;
+  font-size: 62px;
+  color: #ffffff;
+  z-index: 50;
+}
+
+.information-display-exits-connections-exitrow-elevator-number
+{
+  position: relative;
+  display: flex;
+  width: 24px;
+  left: 49px;
+  top: -50px;
+  font-family: TransitPro;
+  font-weight: normal;
+  font-size: 36px;
+  color: #ffffff;
+  z-index: 50;
+}
+
+
+
+
+
+.information-display-exits-connections-connectionrow-left-arrow
+{
+  position: absolute;
+  left: 35px;
+  top: 120px;
+  font-family: TransitPro;
+  font-weight: bold;
+  font-size: 43px;
+  color: #252525;
+  z-index: 20;
+}
+
+.information-display-exits-connections-connectionrow-center-arrow
+{
+  position: relative;
+  font-family: TransitPro;
+  font-weight: bold;
+  font-size: 43px;
+  color: #ffffff;
+  z-index: 20;
+}
+
+.information-display-exits-connections-connectionrow-right-arrow
+{
+  position: absolute;
+  right: 35px;
+  top: 120px;
+  font-family: TransitPro;
+  font-weight: bold;
+  font-size: 43px;
+  color: #252525;
+  z-index: 20;
+}
+
+
+
+.information-display-exits-connections-connectionrow-left
+{
+  position: absolute;
+  display: flex;
+  left: 107px;
+  top: 117px;
+  width: 540px;
+  justify-content: flex-start;
+  gap: 18px;
+  z-index: 20;
+}
+
+.information-display-exits-connections-connectionrow-center
+{
+  position: absolute;
+  display: flex;
+  left: 0px;
+  top: 117px;
+  width: 1920px;
+  justify-content: center;
+  gap: 18px;
+  z-index: 20;
+}
+
+.information-display-exits-connections-connectionrow-right
+{
+  position: absolute;
+  display: flex;
+  right: 107px;
+  top: 117px;
+  width: 540px;
+  justify-content: flex-start;
+  flex-direction: row-reverse;
+  gap: 18px;
+  z-index: 20;
+}
+
+
+
+
+
+.information-display-exits-connections-station-name
+{
+  position: absolute;
+  display: flex;
+  top: 261px;
+  width: 1920px;
+  font-family: TransitPro;
+  font-weight: bold;
+  font-size: 149px;
+  color: #252525;
+  justify-content: center;
+  z-index: 20;
+}
+
+.information-display-exits-connections-station-additional-name
+{
+  position: absolute;
+  display: flex;
+  top: 434px;
+  width: 1920px;
+  font-family: TransitPro;
+  font-weight: bold;
+  font-size: 60px;
+  color: #252525;
+  justify-content: center;
+  z-index: 20;
+}

@@ -1,0 +1,67 @@
+.information-display-clock
+{
+  position: absolute;
+  display: flex;
+  right: 0px;
+  top: 0px;
+  width: 54px;
+  height: 88px;
+  transform: translateX(-100%);
+  font-family: TransitPro;
+  font-size: 46px;
+  font-weight: bold;
+  color: #252525;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+.information-display-line-simple-station
+{
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  z-index: 20;
+}
+
+.information-display-line-simple-station-name
+{
+  position: absolute;
+  font-family: TransitPro;
+  font-weight: bold;
+  color: #252525;
+  white-space: nowrap;
+}
+
+.information-display-line-simple-station-additional-name
+{
+  position: absolute;
+  font-family: TransitPro;
+  font-weight: bold;
+  color: #252525;
+  white-space: nowrap;
+}
+
+.information-display-line-simple-station-connections
+{
+  position: absolute;
+  display: flex;
+  left: 206px;
+  width: 206px;
+  height: 82px;
+  transform: translateX(-100%);
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px 0px;
+}
+
+.information-display-line-simple-station-connections-rows
+{
+  position: relative;
+  display: flex;
+  left: 0px;
+  width: 206px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0px 12px;
+}

@@ -1,0 +1,52 @@
+.direction-display-destination-line-icon
+{
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  height: 248px;
+  z-index: 100;
+  visibility: visible;
+}
+
+.direction-display-destination-line-icon-suburban
+{
+  position: absolute;
+  left: 32px;
+  top: 28px;
+  height: 192px;
+  z-index: 100;
+  visibility: visible;
+}
+
+.direction-display-destination-name
+{
+  position: absolute;
+  display: flex;
+  right: 0px;
+  top: 16px;
+  width: 1520px;
+  height: 248px;
+  color: #ffffff;
+  font-family: TransitPro;
+  font-weight: bold;
+  font-size: 160px;
+  transform: scaleX(0.95);
+  letter-spacing: -2.5px;
+  white-space: nowrap;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+  z-index: 50;
+  cursor: default;
+  visibility: visible;
+}
+
+.flugzeug
+{
+  position: absolute;
+  left: 450px;
+  top: 0px;
+  width: 248px;
+  height: 248px;
+  z-index: 50;
+}

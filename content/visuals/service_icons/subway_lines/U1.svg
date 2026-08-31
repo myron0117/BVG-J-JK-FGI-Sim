@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="151.4" height="89.7" viewBox="0 0 1514 897">
+	<title>Berlin-Brandenburg transit icons - U-Bahn Linie U1</title>
+	<path fill="#7dad4c" d="M0,0h1514v897H0z"/>
+	<path fill="#fff" d="M746,534q0 66-18 113t-52.5 76.5t-84.5 43.5t-113 14t-113-14t-84.5-43.5t-52.5-76.5t-18-113v-419h131v379q0 42 7 76.5t23.5 59t42.5 37.5t64 13q37 0 63-13t42-37.5t23-59t7-76.5v-379h133v419zM1246,771h-132v-505l-108 88l-69-86l192-153h117v656z"/>
+</svg>

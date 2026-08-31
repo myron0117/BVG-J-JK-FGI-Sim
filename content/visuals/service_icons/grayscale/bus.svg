@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Generator: Adobe Illustrator 23.0.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+
+<svg
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4.3 (0d15f75, 2025-12-25)"
+   sodipodi:docname="bus.svg"
+   sodipodi:version="0.32"
+   x="0px"
+   y="0px"
+   viewBox="0 0 250 250"
+   enable-background="new 0 0 250 250"
+   xml:space="preserve"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"><defs
+   id="defs2" /><sodipodi:namedview
+   id="namedview2"
+   pagecolor="#505050"
+   bordercolor="#eeeeee"
+   borderopacity="1"
+   inkscape:showpageshadow="0"
+   inkscape:pageopacity="0"
+   inkscape:pagecheckerboard="0"
+   inkscape:deskcolor="#505050"
+   inkscape:zoom="3.42"
+   inkscape:cx="124.8538"
+   inkscape:cy="125"
+   inkscape:window-width="1920"
+   inkscape:window-height="1057"
+   inkscape:window-x="-8"
+   inkscape:window-y="-8"
+   inkscape:window-maximized="1"
+   inkscape:current-layer="svg1" />
+<g
+   id="g2">
+	<path
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#A5027D"
+   d="M250,125C250,56.1,193.9,0,125,0C56.1,0,0,56.1,0,125   c0,68.9,56.1,125,125,125C193.9,250,250,193.9,250,125"
+   id="path1"
+   style="fill:#2c2c2c;fill-opacity:1" />
+	<path
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   fill="#FFFFFF"
+   d="M86.4,144.7c0,15.8-10.6,23.5-31.9,23.5H27.6V84.8h28.9   c20.6,0,29.2,9,29.2,21c0,10.6-5,16-14.9,19.2C81.2,126.6,86.4,133.6,86.4,144.7 M65.3,143.1c0-6.6-2.5-10.2-9.5-10.2h-6.8V153h6.3   C61.9,153,65.3,149.4,65.3,143.1 M64.2,109.9c0-6.8-4.3-9.5-10.9-9.5h-4.3v18.8h4.3C59.9,119.1,64.2,115.3,64.2,109.9 M162.1,137.7   c0,19.9-11.1,31.4-31.6,31.4c-21.7,0-31.9-11.3-31.9-28.3V84.8h22.6v53.3c0,9.3,3.2,13.6,9.7,13.6c7.2,0,10.2-4.1,10.2-15.1V84.8   h21V137.7z M229.7,142c0,16.3-11.8,27.1-31.6,27.1c-7.2,0-14.2-0.9-22.8-2.7l1.1-18.3c6.8,2.9,12.4,3.6,18.3,3.6   c7,0,11.8-2.3,11.8-7.2c0-4.7-2.5-7.5-14.9-11.8c-12-4.1-17.9-12.4-17.9-24.4c0-14.9,12-24.4,30.1-24.4c7,0,13.8,0.9,21.7,2.7   l-0.9,16.3c-5.2-2.5-11.8-4.1-17-4.1c-7.5,0-10.9,3.2-10.9,7.7c0,4.3,2.7,7.2,13.8,11.5C224.5,123.4,229.7,130.7,229.7,142"
+   id="path2"
+   style="fill:#f3f3f3;fill-opacity:1" />
+</g>
+</svg>

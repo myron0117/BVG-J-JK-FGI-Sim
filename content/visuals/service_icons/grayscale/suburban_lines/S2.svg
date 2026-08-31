@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="179.7"
+   height="89.7"
+   viewBox="0 0 1797 897"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="S2.svg"
+   inkscape:version="1.4.3 (0d15f75, 2025-12-25)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#505050"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#505050"
+     inkscape:zoom="9.5317729"
+     inkscape:cx="89.857365"
+     inkscape:cy="44.849998"
+     inkscape:window-width="1920"
+     inkscape:window-height="1057"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg1" />
+  <title
+     id="title1">Berlin-Brandenburg transit icons - S-Bahn Linie S2</title>
+  <rect
+     fill="#007734"
+     width="1797"
+     height="897"
+     rx="448.5"
+     id="rect1"
+     style="fill:#2c2c2c;fill-opacity:1" />
+  <path
+     fill="#fff"
+     d="M792,582q0-55-21.5-89.5t-53-57t-69-36.5t-69-28t-53-32t-21.5-48q0-24 9.5-40.5t24.5-26t33-14t35-4.5q35 0 72.5 8t61.5 20l12-107q-35-12-74.5-18t-81.5-6q-53 0-95.5 14.5t-72.5 40.5t-46 63t-16 82q0 54 21.5 88t53.5 55.5t69.5 35.5t69.5 28t53.5 32.5t21.5 49.5q0 22-11.5 38t-28.5 26t-38 15t-39 5q-38 0-78-9.5t-71-27.5l-12 118q24 6 43 10.5t38 7.5t40 4.5t48 1.5q54 0 99-14t77.5-40t50.5-62.5t18-82.5zM1416,667h-268q40-39 84-82.5t80.5-90.5t60-97t23.5-102q0-96-56-143.5t-150-47.5q-51 0-100.5 11.5t-94.5 36.5l10 108q33-23 71-38.5t80-15.5q21 0 40.5 5.5t34.5 16.5t24.5 28t9.5 39q0 30-17 65t-43.5 70.5t-59.5 70.5t-64.5 65.5t-58.5 55t-42 38.5v111h436v-104z"
+     id="path1"
+     style="fill:#f3f3f3;fill-opacity:1" />
+</svg>

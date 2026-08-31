@@ -1,0 +1,10 @@
+{
+  "language": "de",
+  "displaySide": 1,
+  "displayPosition": 2,
+  "alwaysShowExitsOverview": false,
+  "showLiveConnectionsOverview": true,
+  "fallbackLayer": 1,
+  "appearance": "dark",
+  "combinedLineDesign": "alternative"
+}

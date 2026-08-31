@@ -1,0 +1,435 @@
+.information-display
+{
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  transform-origin: top left;
+  zoom: 0.5;
+  width: 1920px;
+  height: 1080px;
+  visibility: visible;
+}
+
+.information-display-fallback-layer
+{
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  width: 1920px;
+  height: 1080px;
+  z-index: 200;
+}
+
+.interface-overlay
+{
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  width: 1920px;
+  height: 1080px;
+  z-index: 10;
+}
+
+.information-display-line-icon
+{
+  position: absolute;
+  left: 0px;
+  top: 500px;
+  height: 76px;
+  visibility: visible;
+  z-index: 100;
+}
+
+
+
+
+
+
+
+
+/* INFORMATION DISPLAY: SIMPLE LINE OVERVIEW */
+
+.information-display-clock
+{
+  position: absolute;
+  display: flex;
+  right: 0px;
+  top: 0px;
+  width: 54px;
+  height: 88px;
+  transform: translateX(-100%);
+  font-family: TransitPro;
+  font-size: 46px;
+  font-weight: bold;
+  color: #252525;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+.information-display-line-simple-station
+{
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  z-index: 20;
+}
+
+.information-display-line-simple-station-name
+{
+  position: absolute;
+  font-family: TransitPro;
+  font-weight: bold;
+  color: #252525;
+  white-space: nowrap;
+}
+
+.information-display-line-simple-station-additional-name
+{
+  position: absolute;
+  font-family: TransitPro;
+  font-weight: bold;
+  color: #252525;
+  white-space: nowrap;
+}
+
+.information-display-line-simple-station-connections
+{
+  position: absolute;
+  display: flex;
+  left: 206px;
+  width: 206px;
+  height: 82px;
+  transform: translateX(-100%);
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px 0px;
+}
+
+.information-display-line-simple-station-connections-rows
+{
+  position: relative;
+  display: flex;
+  left: 0px;
+  width: 206px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0px 12px;
+}
+
+
+
+/* INFORMATION DISPLAY: EXITS AND CONNECTIONS OF CURRENT STATION */
+
+.information-display-exits-connections-exitrow-background
+{
+  position: absolute;
+  left:0px;
+  top: 0px;
+  width: 1920px;
+  height: 76px;
+  background-color: #f0d722;
+  z-index: 20;
+}
+
+.information-display-exits-connections-exitrow-left
+{
+  position: absolute;
+  display: flex;
+  left: 0px;
+  top: 0px;
+  width: 1920px;
+  height: 76px;
+  justify-content: flex-start;
+  gap: 4px;
+}
+
+.information-display-exits-connections-exitrow-center
+{
+  position: absolute;
+  display: flex;
+  left: 0px;
+  top: 0px;
+  width: 1920px;
+  height: 76px;
+  justify-content: center;
+  gap: 4px;
+}
+
+.information-display-exits-connections-exitrow-right
+{
+  position: absolute;
+  display: flex;
+  left: 0px;
+  top: 0px;
+  width: 1920px;
+  height: 76px;
+  justify-content: flex-start;
+  flex-direction: row-reverse;
+  gap: 4px;
+}
+
+.information-display-exits-connections-exitrow-item
+{
+  position: relative;
+  display: flex;
+  height: 76px;
+  outline: 4px solid #ffffff;
+  z-index: 50;
+}
+
+.information-display-exits-connections-exitrow-item-textbox-single
+{
+  position: relative;
+  display: flex;
+  width: 76px;
+  height: 76px;
+  background-color: #252525;
+  outline: 4px solid #ffffff;
+  justify-content: center;
+  z-index: 50;
+}
+
+.information-display-exits-connections-exitrow-item-textbox-double
+{
+  position: relative;
+  display: flex;
+  width: 152px;
+  height: 76px;
+  background-color: #252525;
+  outline: 4px solid #ffffff;
+  justify-content: center;
+  z-index: 50;
+}
+
+.information-display-exits-connections-exitrow-item-textbox-text
+{
+  position: relative;
+  display: flex;
+  top: 3px;
+  font-family: TransitPro;
+  font-weight: bold;
+  font-size: 62px;
+  color: #ffffff;
+  z-index: 50;
+}
+
+.information-display-exits-connections-exitrow-elevator-number
+{
+  position: relative;
+  display: flex;
+  width: 24px;
+  left: 49px;
+  top: -50px;
+  font-family: TransitPro;
+  font-weight: normal;
+  font-size: 36px;
+  color: #ffffff;
+  z-index: 50;
+}
+
+
+
+
+
+.information-display-exits-connections-connectionrow-left-arrow
+{
+  position: absolute;
+  left: 35px;
+  top: 120px;
+  font-family: TransitPro;
+  font-weight: bold;
+  font-size: 43px;
+  color: #252525;
+  z-index: 20;
+}
+
+.information-display-exits-connections-connectionrow-right-arrow
+{
+  position: absolute;
+  right: 35px;
+  top: 120px;
+  font-family: TransitPro;
+  font-weight: bold;
+  font-size: 43px;
+  color: #252525;
+  z-index: 20;
+}
+
+
+
+.information-display-exits-connections-connectionrow-left
+{
+  position: absolute;
+  display: flex;
+  left: 107px;
+  top: 117px;
+  width: 540px;
+  justify-content: flex-start;
+  gap: 18px;
+  z-index: 20;
+}
+
+.information-display-exits-connections-connectionrow-center
+{
+  position: absolute;
+  display: flex;
+  left: 0px;
+  top: 117px;
+  width: 1920px;
+  justify-content: center;
+  gap: 18px;
+  z-index: 20;
+}
+
+.information-display-exits-connections-connectionrow-right
+{
+  position: absolute;
+  display: flex;
+  right: 107px;
+  top: 117px;
+  width: 540px;
+  justify-content: flex-start;
+  flex-direction: row-reverse;
+  gap: 18px;
+  z-index: 20;
+}
+
+
+
+
+
+.information-display-exits-connections-station-name
+{
+  position: absolute;
+  display: flex;
+  top: 261px;
+  width: 1920px;
+  font-family: TransitPro;
+  font-weight: bold;
+  font-size: 149px;
+  color: #252525;
+  justify-content: center;
+  z-index: 20;
+}
+
+.information-display-exits-connections-station-additional-name
+{
+  position: absolute;
+  display: flex;
+  top: 434px;
+  width: 1920px;
+  font-family: TransitPro;
+  font-weight: bold;
+  font-size: 60px;
+  color: #252525;
+  justify-content: center;
+  z-index: 20;
+}
+
+
+
+
+
+
+
+
+/* INFORMATION DISPLAY: STATION EXITS AND CONNECTIONS */
+
+.information-display-line-extended-line-number
+{
+  position: absolute;
+  left: 76px;
+  top: 504px;
+  width: 158px;
+  font-family: TransitPro;
+  font-weight: bold;
+  font-size: 64px;
+  text-align: center;
+  color: #252525;
+  z-index: 100;
+}
+
+.information-display-line-extended-arrow
+{
+  position: absolute;
+  left: 149px;
+  top: 506px;
+  font-family: TransitPro;
+  font-weight: bold;
+  font-size: 52px;
+  color: #252525;
+  z-index: 20;
+}
+
+.information-display-line-extended-destination
+{
+  position: absolute;
+  left: 194px;
+  top: 505px;
+  font-family: TransitPro;
+  font-weight: bold;
+  font-size: 60px;
+  color: #252525;
+  z-index: 20;
+}
+
+
+
+/* INFORMATION DISPLAY: EXTENDED LINE OVERVIEW */
+
+.information-display-line-extended-station
+{
+  position: absolute;
+  top: 943px;
+  z-index: 20;
+}
+
+.information-display-line-extended-station-name
+{
+  position: absolute;
+  left: -11px;
+  top: -29px;
+  font-family: TransitPro;
+  font-size: 30px;
+  white-space: nowrap;
+  transform-origin: top left;
+  transform: rotate(-45deg);
+}
+
+.information-display-line-extended-station-additional-name
+{
+  position: absolute;
+  left: 34px;
+  top: -22px;
+  font-size: 16px;
+  font-family: TransitPro;
+  white-space: nowrap;
+  transform-origin: top left;
+  transform: rotate(-45deg);
+}
+
+.information-display-line-extended-station-connections
+{
+  position: absolute;
+  width: 58px;
+  left: -22px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+
+
+/* INFORMATION DISPLAY: LIVE CONNECTIONS OVERVIEW */
+
+.information-display-live-connections-grid
+{
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  width: 1920px;
+  height: 1080px;
+  z-index: 20;
+}

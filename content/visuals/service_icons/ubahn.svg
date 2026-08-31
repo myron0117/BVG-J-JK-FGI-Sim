@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) by Marsupilami -->
+
+<svg
+   version="1.0"
+   width="768"
+   height="768"
+   viewBox="0 0 500 500"
+   id="svg2436"
+   sodipodi:docname="U-Bahn.svg"
+   inkscape:version="1.4.3 (0d15f75, 2025-12-25)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#505050"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#505050"
+     inkscape:zoom="1.1132812"
+     inkscape:cx="383.55088"
+     inkscape:cy="384"
+     inkscape:window-width="1920"
+     inkscape:window-height="1057"
+     inkscape:window-x="1912"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg2436" />
+  <defs
+     id="defs2443" />
+  <rect
+     width="500"
+     height="500"
+     x="0"
+     y="0"
+     id="rect2438"
+     style="fill:#115d91;fill-opacity:1" />
+  <path
+     d="M 269.02771,462.03556 C 301.49095,458.86693 331.8194,448.53888 355.90324,432.45098 C 368.00616,424.36627 385.07594,407.62587 392.49694,396.56338 C 403.34218,380.39638 411.21817,360.97199 415.43165,340 C 417.06374,331.87653 417.26314,317.60376 417.59707,185 L 417.96486,38.947368 L 317.89474,38.947368 L 317.89474,172.67306 C 317.89474,260.582 317.50921,309.85624 316.76948,316.49013 C 315.44428,328.3746 311.53547,342.57976 307.56662,349.93462 C 302.58644,359.16362 293.39802,367.94547 283.81131,372.63882 C 257.43623,385.55122 218.84256,380.90205 200.5492,362.60869 C 191.23263,353.29213 184.83222,338.29015 182.14617,319.47368 C 181.48964,314.87452 181.08649,260.77515 181.07348,175.52632 L 181.05263,38.947368 L 82.105263,38.947368 L 82.105263,177.25689 C 82.105263,316.01926 82.371267,327.73304 85.920452,345.26316 C 94.686023,388.55802 121.69624,423.01667 163.04724,443.65869 C 193.35569,458.78839 232.59204,465.59192 269.02771,462.03556 z"
+     id="path2440"
+     style="fill:#ffffff" />
+</svg>

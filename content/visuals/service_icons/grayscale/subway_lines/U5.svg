@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="151.4"
+   height="89.7"
+   viewBox="0 0 1514 897"
+   version="1.1"
+   id="svg2"
+   sodipodi:docname="U5.svg"
+   inkscape:version="1.4.3 (0d15f75, 2025-12-25)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs2" />
+  <sodipodi:namedview
+     id="namedview2"
+     pagecolor="#505050"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#505050"
+     inkscape:zoom="9.5317729"
+     inkscape:cx="75.694208"
+     inkscape:cy="44.849998"
+     inkscape:window-width="1920"
+     inkscape:window-height="1057"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg2" />
+  <title
+     id="title1">Berlin-Brandenburg transit icons - U-Bahn Linie U5</title>
+  <path
+     fill="#7e5330"
+     d="M0,0h1514v897H0z"
+     id="path1"
+     style="fill:#2c2c2c;fill-opacity:1" />
+  <path
+     fill="#fff"
+     d="M746,534q0 66-18 113t-52.5 76.5t-84.5 43.5t-113 14t-113-14t-84.5-43.5t-52.5-76.5t-18-113v-419h131v379q0 42 7 76.5t23.5 59t42.5 37.5t64 13q37 0 63-13t42-37.5t23-59t7-76.5v-379h133v419zM1339,560q0 46-16 86t-48 70t-80 47.5t-112 17.5q-38 0-79.5-4.5t-73.5-12.5l1-119q24 11 58.5 22.5t79.5 11.5q24 0 48.5-6t44.5-20t32.5-36t12.5-54t-13-54t-34-35.5t-48-19t-55-5.5q-61 0-118 19l7-353h377v98h-252l-2 140q11-3 25-5t33-2q35 0 72.5 9.5t68.5 33.5t51 65.5t20 105.5z"
+     id="path2"
+     style="fill:#f3f3f3;fill-opacity:1" />
+</svg>

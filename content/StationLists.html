@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Station Lists</title>
+    <link rel="icon" href="favicon/standard.ico"/>
+
+
+
+    <link rel="stylesheet" href="data/css_main.css">
+
+    <link rel="stylesheet" href="data/css_stationlists.css">
+</head>
+
+<body style="background-color:#000000;">
+
+
+
+<div class="station-lists-main">
+    <div class="station-lists-title-card">
+        <div class="station-lists-title-text">Stationskürzel-Listen <span style="color: #ffffff; opacity: 0.5;">Station ID Lists</span></div>
+        <div class="station-lists-title-subtext-1">Eine Übersicht aller verfügbarer Linien sowie der Kürzel jeder Station.</div>
+        <div class="station-lists-title-subtext-2">An overview of all available lines aswell as the IDs of every station.</div>
+        <div id="nav-rows"></div>
+    </div>
+
+
+    <div id="all-lines-container">
+        <div class="station-lists-line-container">
+            <div class="station-lists-line-container-title">
+                <div class="station-lists-line-container-title-text">U1<span style="color: #ffffff; opacity: 0.5;">.json</span></div>
+                <img class="station-lists-line-container-title-line-icon" src="visuals/service_icons/subway_lines/U1.svg">
+                <div class="station-lists-line-container-title-line-start-end">Warschauer Straße ◂▸ Uhlandstraße</div>
+            </div>
+            <div class="station-lists-line-container-stations">
+                <div class="station-lists-line-container-stations-station">
+                    <div class="station-lists-line-container-stations-station-abbreviation">WA</div>
+                    <img class="station-lists-line-container-stations-station-visual" src="visuals/interface/station_list/line/start.svg">
+                    <div class="station-lists-line-container-stations-station-name">Warschauer Straße</div>
+                    <div class="station-lists-line-container-stations-station-additional">Beispielzusatz</div>
+                </div>
+                <div class="station-lists-line-container-stations-station">
+                    <div class="station-lists-line-container-stations-station-abbreviation">S</div>
+                    <img class="station-lists-line-container-stations-station-visual" src="visuals/interface/station_list/line/mid.svg">
+                    <div class="station-lists-line-container-stations-station-name">Schlesisches Tor</div>
+                    <div class="station-lists-line-container-stations-station-additional">Beispielzusatz</div>
+                </div>
+                <div class="station-lists-line-container-stations-station">
+                    <div class="station-lists-line-container-stations-station-abbreviation">Guh</div>
+                    <img class="station-lists-line-container-stations-station-visual" src="visuals/interface/station_list/line/mid.svg">
+                    <div class="station-lists-line-container-stations-station-name">Görlitzer Bahnhof</div>
+                    <div class="station-lists-line-container-stations-station-additional">Beispielzusatz</div>
+                </div>
+                <div class="station-lists-line-container-stations-station">
+                    <div class="station-lists-line-container-stations-station-abbreviation">HBF</div>
+                    <img class="station-lists-line-container-stations-station-visual" src="visuals/interface/station_list/line/end.svg">
+                    <div class="station-lists-line-container-stations-station-name">Hauptbahnhof</div>
+                    <div class="station-lists-line-container-stations-station-additional">Central Station</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<button
+  id="backToTopButton"
+  class="buttonDefault"
+  onclick="send('')"
+  style="
+    position: fixed;
+    display: flex;
+    top: 48px;
+    left: 48px;
+    width: 64px;
+    height: 64px;
+    font-size: 32px;
+    color: #cccccc;
+    border: 4px solid #cceefd;
+    background-color: #000000;
+    border-radius: 32px;
+    align-items: center;
+    justify-content: center;
+  "
+  onmouseover="this.style.backgroundColor='#808080'; this.style.color='#cccccc';"
+  onmouseout="this.style.backgroundColor='#000000'; this.style.color='#cccccc';"
+  onmousedown="this.style.backgroundColor='#808080'; this.style.color='#cccccc'; this.style.border='4px solid #cceefd'; this.style.transform='scale(1)';"
+  onmouseup="this.style.backgroundColor='#808080'; this.style.color='#cccccc'; this.style.border='4px solid #cceefd'; this.style.transform='scale(1)';"
+>↑</button>
+
+
+
+</body>
+
+
+
+
+
+<script>
+    (async function () {
+        const LIST_URL = '/list-lines';
+
+        // --- Helpers ---
+        function getLineIconSrc(lineData) {
+            const alt = lineData.alternative;
+            const lineName = lineData.line;
+            if (alt === 'suburban') return `visuals/service_icons/suburban_lines/${lineName}.svg`;
+            if (alt === 'tram' || alt === 'bus' || alt === 'ferry') return `visuals/service_icons/${alt}.svg`;
+            return `visuals/service_icons/subway_lines/${lineName}.svg`;
+        }
+
+        function getStationVisualSVG(station, index, total) {
+            if (index === 0) return 'start.svg';
+            if (index === total - 1) return 'end.svg';
+            if (station.directionPresence === '1') return 'mid_1_only.svg';
+            if (station.directionPresence === '2') return 'mid_2_only.svg';
+            return 'mid.svg';
+        }
+
+        function buildLineHTML(lineData, fileName) {
+            const stations = lineData.stations;
+            const total = stations.length;
+            const firstStation = stations[0];
+            const lastStation = stations[total - 1];
+            const iconSrc = getLineIconSrc(lineData);
+
+            // Separate folder and pure file name
+            const parts = fileName.split('/');
+            const folderPart = parts.length > 1
+                ? `<span style="color: #ffffff; opacity: 0.5;">${parts[0]}/</span>`
+                : '';
+            const displayName = parts[parts.length - 1];
+
+            let stationsHTML = '';
+            let i = 0;
+            while (i < total) {
+                const st = stations[i];
+                const svg = getStationVisualSVG(st, i, total);
+                const additional = st.additionalName || '';
+                let splitClass = '';
+
+                // Split‑station detection
+                if (i + 1 < total &&
+                    stations[i + 1].name === st.name &&
+                    st.directionPresence !== stations[i + 1].directionPresence &&
+                    (st.directionPresence === '1' || st.directionPresence === '2') &&
+                    (stations[i + 1].directionPresence === '1' || stations[i + 1].directionPresence === '2')) {
+
+                    splitClass = ' split-first';
+                    stationsHTML += `
+                    <div class="station-lists-line-container-stations-station${splitClass}">
+                        <div class="station-lists-line-container-stations-station-abbreviation">${st.abbrev}</div>
+                        <img class="station-lists-line-container-stations-station-visual" src="visuals/interface/station_list/line/${svg}">
+                        <div class="station-lists-line-container-stations-station-name">${st.name}</div>
+                        <div class="station-lists-line-container-stations-station-additional">${additional}</div>
+                    </div>`;
+                    const nextSt = stations[i + 1];
+                    const nextSvg = getStationVisualSVG(nextSt, i + 1, total);
+                    const nextAdditional = nextSt.additionalName || '';
+                    stationsHTML += `
+                    <div class="station-lists-line-container-stations-station split-second">
+                        <div class="station-lists-line-container-stations-station-abbreviation">${nextSt.abbrev}</div>
+                        <img class="station-lists-line-container-stations-station-visual" src="visuals/interface/station_list/line/${nextSvg}">
+                        <div class="station-lists-line-container-stations-station-name" style="display:none;"></div>
+                        <div class="station-lists-line-container-stations-station-additional">${nextAdditional}</div>
+                    </div>`;
+                    i += 2;
+                } else {
+                    stationsHTML += `
+                    <div class="station-lists-line-container-stations-station${splitClass}">
+                        <div class="station-lists-line-container-stations-station-abbreviation">${st.abbrev}</div>
+                        <img class="station-lists-line-container-stations-station-visual" src="visuals/interface/station_list/line/${svg}">
+                        <div class="station-lists-line-container-stations-station-name">${st.name}</div>
+                        <div class="station-lists-line-container-stations-station-additional">${additional}</div>
+                    </div>`;
+                    i++;
+                }
+            }
+
+            return `
+            <div class="station-lists-line-container" id="line-${fileName.replace('/', '-')}">
+                <div class="station-lists-line-container-title">
+                    <div class="station-lists-line-container-title-text">${folderPart}${displayName}<span style="color: #ffffff; opacity: 0.5;">.json</span></div>
+                    <img class="station-lists-line-container-title-line-icon" src="${iconSrc}">
+                    <div class="station-lists-line-container-title-line-start-end">${firstStation.name} ◂▸ ${lastStation.name}</div>
+                </div>
+                <div class="station-lists-line-container-stations">
+                    ${stationsHTML}
+                </div>
+            </div>`;
+        }
+
+        // --- Back‑to‑top button ---
+        const backBtn = document.getElementById('backToTopButton');
+        if (backBtn) {
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 400) {
+                    backBtn.classList.add('visible');
+                } else {
+                    backBtn.classList.remove('visible');
+                }
+            });
+            backBtn.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+
+        try {
+            // 1. Fetch line list
+            const listResp = await fetch(LIST_URL);
+            if (!listResp.ok) throw new Error('Could not fetch line list');
+            const lineNames = await listResp.json();   // e.g. ["subway/U1", "suburban/S47", ...]
+
+            // 2. Sort: U1–U9 first, then others
+            lineNames.sort((a, b) => {
+                const aIsU = /^subway\/U[1-9]$/.test(a);
+                const bIsU = /^subway\/U[1-9]$/.test(b);
+                if (aIsU && bIsU) {
+                    return parseInt(a.split('/')[1].slice(1)) - parseInt(b.split('/')[1].slice(1));
+                }
+                if (aIsU && !bIsU) return -1;
+                if (!aIsU && bIsU) return 1;
+                return a.localeCompare(b, 'en', { numeric: true, sensitivity: 'base' });
+            });
+
+            // 3. Group by folder
+            const groups = {
+                u19: [],
+                subway: [],
+                suburban: [],
+                tram: [],
+                bus: [],
+                ferry: []
+            };
+            lineNames.forEach(name => {
+                if (/^subway\/U[1-9]$/.test(name)) groups.u19.push(name);
+                else if (name.startsWith('subway/')) groups.subway.push(name);
+                else if (name.startsWith('suburban/')) groups.suburban.push(name);
+                else if (name.startsWith('tram/')) groups.tram.push(name);
+                else if (name.startsWith('bus/')) groups.bus.push(name);
+                else if (name.startsWith('ferry/')) groups.ferry.push(name);
+            });
+
+            // Sort S‑Bahn lines like the live‑connections overview:
+            // primary digit first, then full number → S1, S15, S2, S8, S85, S9
+            groups.suburban.sort((a, b) => {
+                const nameA = a.split('/')[1] || '';
+                const nameB = b.split('/')[1] || '';
+
+                const extract = (name) => {
+                    const match = name.match(/(\d+)/);
+                    if (!match) return { primary: Infinity, full: Infinity };
+                    const full = parseInt(match[1], 10);
+                    const primary = parseInt(match[1][0], 10);
+                    return { primary, full };
+                };
+
+                const aData = extract(nameA);
+                const bData = extract(nameB);
+
+                if (aData.primary !== bData.primary) return aData.primary - bData.primary;
+                return aData.full - bData.full;
+            });
+
+            const container = document.getElementById('all-lines-container');
+            const navRows = document.getElementById('nav-rows');
+            container.innerHTML = '';
+            navRows.innerHTML = '';
+
+            // Helper: create a navigation button
+            function createNavButton(fileName, lineData) {
+                const displayName = fileName.split('/').pop();
+                const btn = document.createElement('button');
+                btn.className = 'nav-line-button';
+                btn.innerHTML = `<div>${displayName}.json</div>
+                             <img src="${getLineIconSrc(lineData)}" alt="${displayName}">`;
+                btn.addEventListener('click', () => {
+                    const target = document.getElementById(`line-${fileName.replace('/', '-')}`);
+                    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                return btn;
+            }
+
+            // Helper: build a row of buttons and add line blocks
+            async function buildRow(groupArray, rowId) {
+                if (groupArray.length === 0) return;
+                const rowDiv = document.createElement('div');
+                rowDiv.id = rowId;
+                rowDiv.style.cssText = 'display:flex; flex-wrap:wrap; gap:12px; margin-bottom:16px;';
+                navRows.appendChild(rowDiv);
+
+                for (const fileName of groupArray) {
+                    try {
+                        const resp = await fetch(`data/lines/${fileName}.json`);
+                        if (!resp.ok) continue;
+                        const lineData = await resp.json();
+                        rowDiv.appendChild(createNavButton(fileName, lineData));
+                        const blockHTML = buildLineHTML(lineData, fileName);
+                        container.insertAdjacentHTML('beforeend', blockHTML);
+                    } catch (err) {
+                        console.error(`Error loading ${fileName}:`, err);
+                    }
+                }
+            }
+
+            // 4. Build rows in order
+            await buildRow(groups.u19, 'nav-row-u19');
+            await buildRow(groups.subway, 'nav-row-subway');
+            await buildRow(groups.suburban, 'nav-row-suburban');
+            await buildRow(groups.tram, 'nav-row-tram');
+            await buildRow(groups.bus, 'nav-row-bus');
+            await buildRow(groups.ferry, 'nav-row-ferry');
+
+        } catch (err) {
+            console.error('Failed to build station lists:', err);
+        }
+    })();
+</script>
+
+
+</html>

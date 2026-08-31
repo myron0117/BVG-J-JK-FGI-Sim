@@ -1,0 +1,7 @@
+Pfeil zwischen Stationspunkten
+
+Wenn Abstände zwischen Punkten und Pfeil jeweils gerade/ungerade; längerer Abstand IMMER links vom Pfeil!
+
+
+
+# 0ed145

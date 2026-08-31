@@ -1,0 +1,273 @@
+{
+    "labels":
+    [
+        {
+            "id": "lang-information-display-popout-hover-title",
+            "language":
+            {
+                "de": "Anzeige mit aktueller Konfiguration im neuen Tab öffnen",
+                "en": "Open display with current configuration in a new tab"
+            }
+        },
+        {
+            "id": "lang-direction-display-popout-hover-title",
+            "language":
+            {
+                "de": "Anzeige im neuen Tab öffnen",
+                "en": "Open display in a new tab"
+            }
+        },
+        {
+            "id": "lang-main-title",
+            "language":
+            {
+                "de": "Baureihe J/JK FGI-Simulator",
+                "en": "Series J/JK PIS-Simulator"
+            }
+        },
+        {
+            "id": "lang-line-routing-title",
+            "language":
+            {
+                "de": "Linienführung",
+                "en": "Line Routing"
+            }
+        },
+        {
+            "id": "lang-line-routing-general-data",
+            "language":
+            {
+                "de": "Grunddaten",
+                "en": "General Data"
+            }
+        },
+        {
+            "id": "lang-line-routing-skip-stations",
+            "language":
+            {
+                "de": "Zu übersprigende Stationen",
+                "en": "Stations To Skip"
+            }
+        },
+        {
+            "id": "lang-line-routing-controls",
+            "language":
+            {
+                "de": "Steuerung",
+                "en": "Controls"
+            }
+        },
+        {
+            "id": "lang-configuration-appearance-title",
+            "language":
+            {
+                "de": "Konfiguration & Erscheinungsbild",
+                "en": "Configuration & Appearance"
+            }
+        },
+        {
+            "id": "lang-configuration-appearance-display-side",
+            "language":
+            {
+                "de": "Display-Seite",
+                "en": "Display Side"
+            }
+        },
+        {
+            "id": "lang-configuration-appearance-display-position",
+            "language":
+            {
+                "de": "Display-Position (in Fahrtrichtung)",
+                "en": "Display Position (in direction of travel)"
+            }
+        },
+        {
+            "id": "lang-configuration-appearance-appearance",
+            "language":
+            {
+                "de": "Erscheinungsbild",
+                "en": "Appearance"
+            }
+        },
+        {
+            "id": "lang-configuration-appearance-exit-overview",
+            "language":
+            {
+                "de": "Ausgangsübersicht immer zeigen?",
+                "en": "Always Show Exit Overview?"
+            }
+        },
+        {
+            "id": "lang-configuration-appearance-live-connections",
+            "language":
+            {
+                "de": "Live-Anschlüsse zeigen?",
+                "en": "Show Live Connections?"
+            }
+        },
+        {
+            "id": "lang-configuration-appearance-combined-line-design",
+            "language":
+            {
+                "de": "Kombi-Linien-Design",
+                "en": "Combined Line Design"
+            }
+        },
+        {
+            "id": "lang-configuration-appearance-fallback-layer",
+            "language":
+            {
+                "de": "Rückfallebene",
+                "en": "Fallback Layer"
+            }
+        },
+        {
+            "id": "lang-configuration-allow-remote-control",
+            "language":
+            {
+                "de": "Fernsteuerung aktivieren?",
+                "en": "Activate Remote Control?"
+            }
+        }
+    ],
+
+
+
+    "inputs":
+    [
+        {
+            "id": "inputLine",
+            "language":
+            {
+                "de": "Linie",
+                "en": "Line"
+            }
+        },
+        {
+            "id": "inputStartStation",
+            "language":
+            {
+                "de": "Startbhf-Kürzel",
+                "en": "Start ID"
+            }
+        },
+        {
+            "id": "inputEndStation",
+            "language":
+            {
+                "de": "Zielbhf-Kürzel",
+                "en": "Destination ID"
+            }
+        },
+        {
+            "id": "inputStationsToSkip",
+            "language":
+            {
+                "de": "Stationskürzel, durch Leerzeichen getrennt...",
+                "en": "Station IDs, seperated by spaces..."
+            }
+        }
+    ],
+
+
+
+    "buttons":
+    [
+        {
+            "id": "routeConfirmButton",
+            "language":
+            {
+                "de": "bestätigen",
+                "en": "confirm"
+            }
+        },
+        {
+            "id": "routeResetButton",
+            "language":
+            {
+                "de": "zurücksetzen",
+                "en": "reset"
+            }
+        },
+        {
+            "id": "routeArrivalButton",
+            "language":
+            {
+                "de": "kurz vor Halt",
+                "en": "short before stop"
+            }
+        },
+        {
+            "id": "routeDoorReleaseButton",
+            "language":
+            {
+                "de": "Türfreigabe",
+                "en": "door release"
+            }
+        },
+        {
+            "id": "routeDoorLockButton",
+            "language":
+            {
+                "de": "Abfertigung",
+                "en": "dispatch"
+            }
+        },
+        {
+            "id": "saveConfigButton",
+            "language":
+            {
+                "de": "Konfiguration speichern",
+                "en": "save configuration"
+            }
+        },
+        {
+            "id": "configDisplayPositionFrontButton",
+            "language":
+            {
+                "de": "vorne",
+                "en": "front"
+            }
+        },
+        {
+            "id": "configDisplayPositionMidButton",
+            "language":
+            {
+                "de": "mitte",
+                "en": "middle"
+            }
+        },
+        {
+            "id": "configDisplayPositionBackButton",
+            "language":
+            {
+                "de": "hinten",
+                "en": "back"
+            }
+        },
+        {
+            "id": "configCombinedLineDesignRealisticButton",
+            "language":
+            {
+                "de": "realistisch",
+                "en": "realistic"
+            }
+        },
+        {
+            "id": "configCombinedLineDesignAlternativeButton",
+            "language":
+            {
+                "de": "alternativ",
+                "en": "alternative"
+            }
+        },
+        {
+            "id": "showStationAbbrevListButton",
+            "language":
+            {
+                "de": "Stationskürzel-Listen anzeigen",
+                "en": "Show Station ID Lists"
+            }
+        }
+    ]
+}

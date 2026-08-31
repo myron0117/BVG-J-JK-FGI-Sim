@@ -1,0 +1,13 @@
+.direction-display
+{
+  position: absolute;
+  left: 1920px;
+  top: 0px;
+  transform-origin: top left;
+  zoom: 0.5;
+  width: 1920px;
+  height: 248px;
+  z-index: 80;
+  background-color: #000000;
+  visibility: visible;
+}

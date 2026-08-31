@@ -1,0 +1,70 @@
+.information-display-line-extended-station
+{
+  position: absolute;
+  top: 943px;
+  z-index: 20;
+}
+
+.information-display-line-extended-station-name
+{
+  position: absolute;
+  left: -11px;
+  top: -29px;
+  font-family: TransitPro;
+  font-size: 30px;
+  white-space: nowrap;
+  transform-origin: top left;
+  transform: rotate(-45deg);
+}
+
+.information-display-line-extended-station-additional-name
+{
+  position: absolute;
+  left: 34px;
+  top: -22px;
+  font-size: 16px;
+  font-family: TransitPro;
+  white-space: nowrap;
+  transform-origin: top left;
+  transform: rotate(-45deg);
+}
+
+.information-display-line-extended-station-connections
+{
+  position: absolute;
+  width: 58px;
+  left: -22px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+
+
+
+
+.information-display-line-extended-arrow
+{
+  position: absolute;
+  left: 149px;
+  top: 506px;
+  font-family: TransitPro;
+  font-weight: bold;
+  font-size: 52px;
+  color: #252525;
+  z-index: 20;
+
+}
+
+.information-display-line-extended-destination
+{
+  position: absolute;
+  left: 194px;
+  top: 505px;
+  font-family: TransitPro;
+  font-weight: bold;
+  font-size: 60px;
+  color: #252525;
+  z-index: 20;
+}

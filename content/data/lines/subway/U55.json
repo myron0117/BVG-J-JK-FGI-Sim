@@ -1,0 +1,117 @@
+{
+  "line": "U55",
+  "color": "7e5330",
+  "stations": [
+
+
+
+    {
+      "abbrev": "BRT", "name": "Brandenburger Tor", "additionalName": "", "directionPresence": "both",
+      "exitSide":
+      {
+        "direction1": {"via": "", "terminus": "left"},
+        "direction2": {"via": "", "terminus": "right"}
+      },
+      "connectingServices":
+      {"lineSimple": [["sbahn"], []], "lineExtended": [["sbahn"], [], []]},
+      "stationExits":
+      {
+        "direction1":
+        {
+          "frontEnd": [[], []],
+          "frontUp": [["exit", "A-C", "lift1"], ["sbahn"]],
+          "frontMiddle": [[], []],
+          "middleUp": [[], []],
+          "backMiddle": [[], []],
+          "backUp": [[], []],
+          "backEnd": [["exit", "D", "WC"], ["bus"]]
+        },
+        "direction2":
+        {
+          "frontEnd": [["exit", "D", "WC"], ["bus"]],
+          "frontUp": [[], []],
+          "frontMiddle": [[], []],
+          "middleUp": [[], []],
+          "backMiddle": [[], []],
+          "backUp": [["exit", "A-C", "lift1"], ["sbahn"]],
+          "backEnd": [[], []]
+        }
+      },
+      "apiID": "900100025"
+    },
+
+
+
+    {
+      "abbrev": "BUN", "name": "Bundestag", "additionalName": "", "directionPresence": "both",
+      "exitSide":
+      {
+        "direction1": {"via": "left", "terminus": "left"},
+        "direction2": {"via": "right", "terminus": "right"}
+      },
+      "connectingServices":
+      {"lineSimple": [[], []], "lineExtended": [[], [], []]},
+      "stationExits":
+      {
+        "direction1":
+        {
+          "frontEnd": [[], []],
+          "frontUp": [["exit", "A", "B"], []],
+          "frontMiddle": [[], []],
+          "middleUp": [[], []],
+          "backMiddle": [[], []],
+          "backUp": [["exit", "C", "D", "lift1"], []],
+          "backEnd": [[], []]
+        },
+        "direction2":
+        {
+          "frontEnd": [[], []],
+          "frontUp": [["exit", "C", "D", "lift1"], []],
+          "frontMiddle": [[], []],
+          "middleUp": [[], []],
+          "backMiddle": [[], []],
+          "backUp": [["exit", "A", "B"], []],
+          "backEnd": [[], []]
+        }
+      },
+      "apiID": "900003254"
+    },
+
+
+
+    {
+      "abbrev": "HBF", "name": "Hauptbahnhof", "additionalName": "Central Station", "directionPresence": "both",
+      "exitSide":
+      {
+        "direction1": {"via": "", "terminus": "left"},
+        "direction2": {"via": "", "terminus": "right"}
+      },
+      "connectingServices":
+      {"lineSimple": [["fernverkehr", "bahn", "sbahn"], []], "lineExtended": [["fernverkehr", "bahn"], ["sbahn"], []]},
+      "stationExits":
+      {
+        "direction1":
+        {
+          "frontEnd": [["exit", "J-N"], ["tram", "bus"]],
+          "frontUp": [["exit", "A-H", "O", "lift1"], ["fernverkehr", "bahn", "sbahn"]],
+          "frontMiddle": [[], []],
+          "middleUp": [[], []],
+          "backMiddle": [["exit", "A-H", "O"], ["fernverkehr", "bahn", "sbahn"]],
+          "backUp": [[], []],
+          "backEnd": [["exit", "P"], ["bus"]]
+        },
+        "direction2":
+        {
+          "frontEnd": [["exit", "P"], ["bus"]],
+          "frontUp": [[], []],
+          "frontMiddle": [["exit", "A-H", "O"], ["fernverkehr", "bahn", "sbahn"]],
+          "middleUp": [[], []],
+          "backMiddle": [[], []],
+          "backUp": [["exit", "A-H", "O", "lift1"], ["fernverkehr", "bahn", "sbahn"]],
+          "backEnd": [["exit", "J-N"], ["tram", "bus"]]
+        }
+      },
+      "apiID": "900003201"
+    }
+  ]
+}

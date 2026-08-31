@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="500"
+   height="500"
+   fill-rule="evenodd"
+   clip-rule="evenodd"
+   viewBox="0 0 500 500"
+   version="1.1"
+   id="svg4"
+   sodipodi:docname="fernverkehr.svg"
+   inkscape:version="1.4.3 (0d15f75, 2025-12-25)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="namedview4"
+     pagecolor="#505050"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#505050"
+     inkscape:zoom="1.71"
+     inkscape:cx="250"
+     inkscape:cy="250"
+     inkscape:window-width="1920"
+     inkscape:window-height="1057"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg4" />
+  <g
+     stroke="none"
+     fill="#fff500"
+     id="g4">
+    <circle
+       cx="250"
+       cy="250"
+       r="250"
+       stroke="none"
+       fill="#fff500"
+       id="circle1"
+       style="fill:#e1e1e1;fill-opacity:1" />
+    <path
+       d="M 175,393 C 125,333 125,333 125,250 C 125,175 150,135 177.5,110 C 200,102 220,102 250,102 C 280,102 300,102 322.5,110 C 350,135 375,175 375,250 C 375,333 375,333 325,393 Z M 170,177.5 H 330 L 345,275 H 155 Z"
+       fill="black"
+       id="path1"
+       style="fill:#2c2c2c;fill-opacity:1" />
+    <circle
+       cx="250"
+       cy="137.5"
+       r="17.5"
+       id="circle2"
+       style="fill:#e1e1e1;fill-opacity:1" />
+    <circle
+       cx="187.5"
+       cy="317.5"
+       r="17.5"
+       id="circle3"
+       style="fill:#e1e1e1;fill-opacity:1" />
+    <circle
+       cx="312.5"
+       cy="317.5"
+       r="17.5"
+       id="circle4"
+       style="fill:#e1e1e1;fill-opacity:1" />
+  </g>
+  <path
+     d="M 190,52.5 H 310 M 250,52.5 V 84 M 130,444.5 H 370 M 185,444.5 V 414 M 315,444.5 V 414"
+     stroke="black"
+     stroke-width="21"
+     id="path4"
+     style="stroke:#2c2c2c;stroke-opacity:1;fill:#959016;fill-opacity:1" />
+</svg>

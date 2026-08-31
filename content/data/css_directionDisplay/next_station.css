@@ -1,0 +1,106 @@
+.direction-display-next-station
+{
+  position: absolute;
+  left: 0px;
+  left: 0px;
+  width: 1920px;
+  height: 248px;
+}
+
+.direction-display-next-station-page-1
+{
+  position: absolute;
+  display: flex;
+  flex-direction: row;
+  left: 160px;
+  top: 0px;
+  width: 1600px;
+  height: 248px;
+  justify-content: center;
+  align-items: center;
+  gap: 42px;
+}
+
+.direction-display-next-station-page-2
+{
+  position: absolute;
+  display: flex;
+  flex-direction: row;
+  left: 160px;
+  top: 0px;
+  width: 1600px;
+  height: 248px;
+  justify-content: center;
+  align-items: center;
+  visibility: hidden;
+}
+
+.direction-display-next-station-name
+{
+  position: relative;
+  display: flex;
+  top: 16px;
+  height: 248px;
+  color: #ffffff;
+  font-family: TransitPro;
+  font-weight: bold;
+  font-size: 160px;
+  transform: scaleX(0.95);
+  letter-spacing: -2.5px;
+  white-space: nowrap;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+  z-index: 50;
+  cursor: default;
+}
+
+.flugzeug
+{
+  position: absolute;
+  left: 450px;
+  top: 0px;
+  width: 248px;
+  height: 248px;
+  z-index: 50;
+}
+
+.direction-display-next-station-connections
+{
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 58px;
+}
+
+
+
+.direction-display-next-station-exit-side
+{
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  width: 1920px;
+  height: 248px;
+  z-index: 80;
+  visibility: hidden;
+}
+
+.direction-display-next-station-exit-left
+{
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  height: 248px;
+  visibility: hidden;
+}
+
+.direction-display-next-station-exit-right
+{
+  position: absolute;
+  right: 0px;
+  top: 0px;
+  height: 248px;
+  visibility: hidden;
+}
