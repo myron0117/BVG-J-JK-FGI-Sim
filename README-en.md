@@ -8,7 +8,7 @@ For download, suitable versions are available at the [releases](https://github.c
 
 
 
-## Abschnitte:
+## Sections:
 
 - [Usage](#usage)\
 -> [Controls](#controls)\
