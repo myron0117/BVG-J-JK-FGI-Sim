@@ -22,6 +22,8 @@ For download, suitable versions are available at the [releases](https://github.c
 
 > [!IMPORTANT]
 > The Simulator is to be started through the Batch file `Baureihe J&JK FGI-Simulator.bat` at the core directory.
+>
+> Both Python and Node.js are required. Further dependencies will be automatically installed and validated during launch.
 
 > [!NOTE]
 > The Simulator was designed for 16:9-FHD-Monitors. For best visibility of all elements, please run the browser the Simulator is running in at fullscreen.
