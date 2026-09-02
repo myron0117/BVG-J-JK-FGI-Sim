@@ -1,3 +1,5 @@
+**Click [here](README-en.md) to view the english version of this README.**
+
 # Baureihe J/JK FGI-Simulator
 
 Eine originalgetreue Nachbildung des Fahrgastinformationssystems der Baureihen J und JK der U-Bahn Berlin.
@@ -27,6 +29,8 @@ Zum herunterladen dieses Projektes befinden sich geeignete Versionen unter den [
 
 > [!IMPORTANT]
 > Der Simulator ist über die im Kernverzeichnis beigelegte Batch-Datei `Baureihe J&JK FGI-Simulator.bat` zu starten.
+>
+> Hierfür wird sowohl Python als auch Node.js benötigt. Zusätzliche Abhängigkeiten werden automatisch installiert und überprüft.
 
 > [!NOTE]
 > Der Simulator wurde für 16:9-FHD-Bildschirme gestaltet. Zur besten Sichtbarkeit aller Elemente ist der Browser, in dem der Simulator geöffnet ist, im Vollbild zu nutzen.
@@ -106,6 +110,8 @@ Die Tastenbelegung für die Fernsteuerung basiert auf die Fahrzeugsteuerung in S
 > - Die Bildschirme wurden mit höchster Präzision und nahezu pixelperfekter Platzierung nach ihrem Vorbild gestaltet.
 >
 > - Die Echtzeitanschlüsse werden durch eine im Projekt mitgelieferte Version von [v6.bvg.transport.rest](https://v6.bvg.transport.rest/) ermöglicht.
+>
+> - Danke an Dorian für den Anreiz, dieses Projekt zu beginnen!
 
 
 

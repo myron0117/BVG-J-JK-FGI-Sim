@@ -1013,8 +1013,8 @@
                 .dark-mode .information-display-exits-connections-exitrow-item-textbox-text {
                     font-weight: normal !important;
                 }
-                .dark-mode .information-display-exits-connections-station-name {
-                    top: 221px !important;
+                .dark-mode .information-display-exits-connections-station-name.has-additional-name {
+                    top: 211px !important;
                 }
                 .dark-mode .information-display-exits-connections-station-additional-name {
                     top: 394px !important;
@@ -2574,8 +2574,16 @@
     const station = routeStations[currentRouteIndex];
     if (!station) return;
 
-    $('.information-display-exits-connections-station-name').textContent = station.name;
-    $('.information-display-exits-connections-station-additional-name').textContent = station.additionalName || '';
+    const stationNameEl = $('.information-display-exits-connections-station-name');
+    const stationAdditionalEl = $('.information-display-exits-connections-station-additional-name');
+
+    stationNameEl.textContent = station.name;
+    stationAdditionalEl.textContent = station.additionalName || '';
+
+    // Add a class when an additional name is present
+    if (stationNameEl) {
+      stationNameEl.classList.toggle('has-additional-name', !!station.additionalName);
+    }
 
     const exitData = station.stationExits[`direction${direction}`];
     if (!exitData) return;
