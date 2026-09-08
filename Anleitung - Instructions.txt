@@ -1,0 +1,23 @@
+[DE]
+
+Linux:
+1. Öffne ein Terminal im Kernverzeichnis des Projektes.
+2. Führe das Skript aus: bash content/start.sh
+
+macOS:
+1. Öffne ein Terminal.
+2. Navigiere mit 'cd' zum Kernverzeichnis des Projektes. Du kannst auch den Ordner in das Terminal ziehen.
+3. Führe das Skript aus: bash content/start.sh
+
+
+
+[EN]
+
+Linux:
+1. Open a terminal in the root directory of the project.
+2. Run the script: bash content/start.sh
+
+macOS:
+1. Open a terminal.
+2. Navigate with 'cd' to the root directory of the project. You can also drag the folder into the terminal.
+3. Run the script: bash content/start.sh

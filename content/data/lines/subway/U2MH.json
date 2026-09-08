@@ -450,7 +450,7 @@
 
 
     {
-      "abbrev": "MH", "name": "Anton-Wilhelm-Amo-Straße", "additionalName": "", "directionPresence": "both",
+      "abbrev": "MH", "name": "Mohrenstraße", "additionalName": "", "directionPresence": "both",
       "exitSide":
       {
         "direction1": {"via": "left", "terminus": "left"},
@@ -1045,8 +1045,8 @@
       "abbrev": "Rl", "name": "Ruhleben", "additionalName": "", "directionPresence": "both",
       "exitSide":
       {
-        "direction1": {"via": "left", "terminus": "left"},
-        "direction2": {"via": "left", "terminus": "left"}
+        "direction1": {"via": "", "terminus": "random"},
+        "direction2": {"via": "", "terminus": "random"}
       },
       "connectingServices":
       {"lineSimple": [[], []], "lineExtended": [[], [], []]},
@@ -1074,117 +1074,6 @@
         }
       },
       "apiID": "900025202"
-    },
-
-
-
-    {
-      "abbrev": "RLS", "name": "Ruhlebener Straße", "additionalName": "", "directionPresence": "both",
-      "exitSide":
-      {
-        "direction1": {"via": "left", "terminus": "left"},
-        "direction2": {"via": "left", "terminus": "left"}
-      },
-      "connectingServices":
-      {"lineSimple": [[], []], "lineExtended": [[], [], []]},
-      "stationExits":
-      {
-        "direction1":
-        {
-          "frontEnd": [["exit", "A", "lift1"], []],
-          "frontUp": [[], []],
-          "frontMiddle": [[], []],
-          "middleUp": [[], []],
-          "backMiddle": [[], []],
-          "backUp": [[], []],
-          "backEnd": [["exit", "B"], []]
-        },
-        "direction2":
-        {
-          "frontEnd": [["exit", "B"], []],
-          "frontUp": [[], []],
-          "frontMiddle": [[], []],
-          "middleUp": [[], []],
-          "backMiddle": [[], []],
-          "backUp": [[], []],
-          "backEnd": [["exit", "A", "lift1"], []]
-        }
-      },
-      "apiID": "00000000"
-    },
-
-
-
-    {
-      "abbrev": "TIW", "name": "Tiefwerder Weg", "additionalName": "", "directionPresence": "both",
-      "exitSide":
-      {
-        "direction1": {"via": "left", "terminus": "left"},
-        "direction2": {"via": "left", "terminus": "left"}
-      },
-      "connectingServices":
-      {"lineSimple": [[], []], "lineExtended": [[], [], []]},
-      "stationExits":
-      {
-        "direction1":
-        {
-          "frontEnd": [[], []],
-          "frontUp": [["exit", "B"], []],
-          "frontMiddle": [[], []],
-          "middleUp": [[], []],
-          "backMiddle": [[], []],
-          "backUp": [[], []],
-          "backEnd": [["exit", "A", "lift1"], ["bus"]]
-        },
-        "direction2":
-        {
-          "frontEnd": [["exit", "A", "lift1"], ["bus"]],
-          "frontUp": [[], []],
-          "frontMiddle": [[], []],
-          "middleUp": [[], []],
-          "backMiddle": [[], []],
-          "backUp": [["exit", "B"], []],
-          "backEnd": [[], []]
-        }
-      },
-      "apiID": "900030156"
-    },
-
-
-
-    {
-      "abbrev": "RSp", "name": "Rathaus Spandau", "additionalName": "", "directionPresence": "both",
-      "exitSide":
-      {
-        "direction1": {"via": "", "terminus": "left"},
-        "direction2": {"via": "", "terminus": "left"}
-      },
-      "connectingServices":
-      {"lineSimple": [["fernverkehr", "bahn", "sbahn"], ["U7"]], "lineExtended": [["fernverkehr", "bahn"], ["sbahn", "U7"], []]},
-      "stationExits":
-      {
-        "direction1":
-        {
-          "frontEnd": [["exit", "infocenter", "WC"], ["bus"]],
-          "frontUp": [[], ["U7"]],
-          "frontMiddle": [[], []],
-          "middleUp": [[], ["U7"]],
-          "backMiddle": [["exit"], []],
-          "backUp": [[], ["U7"]],
-          "backEnd": [["exit", "lift"], ["fernverkehr", "bahn", "sbahn", "bus"]]
-        },
-        "direction2":
-        {
-          "frontEnd": [["exit", "lift", "WC"], ["fernverkehr", "bahn", "sbahn", "bus"]],
-          "frontUp": [[], ["U7"]],
-          "frontMiddle": [["exit"], []],
-          "middleUp": [[], ["U7"]],
-          "backMiddle": [[], []],
-          "backUp": [[], ["U7"]],
-          "backEnd": [["exit", "infocenter"], ["bus"]]
-        }
-      },
-      "apiID": "900029302"
     }
   ]
 }

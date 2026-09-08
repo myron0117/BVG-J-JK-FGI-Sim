@@ -7,6 +7,56 @@ echo Baureihe J/JK FGI-Simulator
 echo.
 echo ----------------------------------------------------------------------------------------------------
 echo.
+echo Abhängigkeiten werden überprüft...                Verifying dependencies...
+echo.
+
+REM ---------------------------------------------------------------
+REM Detect Python
+REM ---------------------------------------------------------------
+set "PYTHON_CMD="
+where python >nul 2>&1 && set "PYTHON_CMD=python"
+if not defined PYTHON_CMD (
+    where python3 >nul 2>&1 && set "PYTHON_CMD=python3"
+)
+if not defined PYTHON_CMD (
+    echo Python nicht gefunden, oder eine veralterte       Python not found, or an older version is installed.
+    echo Version ist installiert. Bitte installiere        Please install at least Python 3 to continue.
+    echo mindestens Python 3 um fortzufahren.
+    pause
+    exit /b
+)
+
+echo Python gefunden.                                  Python found.
+echo.
+
+REM ---------------------------------------------------------------
+REM Check Node.js and bvg-rest dependencies
+REM ---------------------------------------------------------------
+where node >nul 2>&1
+if errorlevel 1 (
+    echo Node.js wird für die Live-Anschlüsse benötigt.    Node.js is required for the live connections.
+    echo Bitte installieren und dann erneut ausführen.     Please install and then try again.
+    pause
+    exit /b
+)
+
+echo Node.js gefunden.                                 Node.js found.
+echo.
+
+REM ---------------------------------------------------------------
+REM Check Python dependencies and install missing ones
+REM ---------------------------------------------------------------
+%PYTHON_CMD% -c "import keyboard, requests, websockets" >nul 2>&1
+if errorlevel 1 (
+    %PYTHON_CMD% -m pip install --upgrade pip
+    %PYTHON_CMD% -m pip install keyboard requests websockets
+)
+
+echo.
+echo.
+echo.
+echo ----------------------------------------------------------------------------------------------------
+echo.
 echo Simulator wird gestartet...                       Simulator is starting...
 echo.
 echo.
@@ -24,17 +74,8 @@ popd
 REM -------------------------------
 REM Python-Server starten
 REM -------------------------------
-start "J/JK FGI-Sim - Lokaler Server / Local Server" /min cmd /c "python content/server.py"
+start "J/JK FGI-Sim - Lokaler Server / Local Server" /min cmd /c "%PYTHON_CMD% content/server.py"
 echo Lokaler Python-Server gestartet.                  Launched local Python server.
-echo.
-
-timeout /t 1 >nul
-
-REM -------------------------------
-REM Browser öffnen
-REM -------------------------------
-start "" http://127.0.0.1:7001/content/FahrgastinformationSimulator.html
-echo Simulator im Browser geöffnet.                    Opened Simulator in browser.
 echo.
 
 REM -------------------------------
@@ -53,15 +94,21 @@ if exist "content\control.py" (
     if errorlevel 1 (
         echo Abgelehnt. Tastatursteuerung nicht verfügbar.     Rejected. Keyboard control unavailable.
         echo.
-        echo ----------------------------------------------------------------------------------------------------
     ) else (
         echo Akzeptiert. Tastatursteuerung verfügbar.          Accepted. Keyboard control available.
         echo.
-        echo ----------------------------------------------------------------------------------------------------
     )
 ) else (
     echo.
 )
+
+REM -------------------------------
+REM Browser öffnen
+REM -------------------------------
+start "" http://127.0.0.1:7001/content/FahrgastinformationSimulator.html
+echo Simulator im Browser geöffnet.                    Opened Simulator in browser.
+echo.
+echo ----------------------------------------------------------------------------------------------------
 
 REM Launcher bleibt offen, bis der Nutzer alles beenden möchte.
 echo.

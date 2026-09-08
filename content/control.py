@@ -11,7 +11,8 @@ try:
     # ---- configuration ----
     SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
     SENTINEL_FILE = os.path.join(SCRIPT_DIR, 'shutdown.kb')
-    os.system("title J/JK FGI-Sim - Tastatursteuerung / Keyboard Control")
+    if os.name == 'nt':
+        os.system("title J/JK FGI-Sim - Tastatursteuerung / Keyboard Control")
     MAPPING_FILE = os.path.join(SCRIPT_DIR, "data", "control_input", "mapping.json")
     BASE_URL = "http://127.0.0.1:7001"
 

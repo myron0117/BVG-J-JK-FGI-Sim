@@ -1,4 +1,4 @@
-**Drücke [hier](README-en.md) um die deutsche Version dieser README anzuzeigen.**
+**Drücke [hier](README.md) um die deutsche Version dieser README anzuzeigen.**
 
 # Series J/JK PIS-Simulator
 
@@ -21,7 +21,8 @@ For download, suitable versions are available at the [releases](https://github.c
 ## Usage
 
 > [!IMPORTANT]
-> The Simulator is to be started through the Batch file `Baureihe J&JK FGI-Simulator.bat` at the core directory.
+> The Simulator is to be started through the Batch file `Baureihe J&JK FGI-Simulator.bat` at the core directory.\
+> For Linux users and macOS users, additional short instructions are placed in the root directory.
 >
 > Both Python and Node.js are required. Further dependencies will be automatically installed and validated during launch.
 
@@ -71,10 +72,14 @@ In the following table, all available lines are listed along with a short descri
 | Displayed Line Desig. | Entered Line Desig. | Description |
 | ------------- | ------------- | ------------- |
 | **U1 - U9** | `U1` `U2` `U3` `U4` `U5` `U6` `U7` `U8` `U9` | Default lines. |
+| **U1** | `U1+` | Alternative route to Ruhleben. |
 | **U2** | `U2+` | Fictional extension to Rathaus Spandau. |
+| **U2** | `U2MH` | Preservation of the station name Mohrenstraße. |
 | **U3** | `U3+` | Fictional extension to Mexikoplatz. |
 | **U5** | `U5+` | Fictional extension to Urban Tech Republic, based on fictional U55 from U-Bahn Sim Berlin's Trainz Simulator 2009 Add-On. |
 | **U6** | `U6+` | Preservation of the closed down station Französische Straße. |
+| **U7** | `U7+` | Fictional extension to BER Airport. |
+| **U8** | `U8+` | Fictional extension to Senftenberger Ring. |
 | **U12** | `U12` | Bypass for construction works, consisting of U1 and U2. |
 | **U15** | `U15` | Alternative line designation for the U1. |
 | **U2** | `U23` | Line routing for past U2 services starting from Fehrbelliner Platz. |

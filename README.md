@@ -28,7 +28,8 @@ Zum herunterladen dieses Projektes befinden sich geeignete Versionen unter den [
 ## Verwendung
 
 > [!IMPORTANT]
-> Der Simulator ist über die im Kernverzeichnis beigelegte Batch-Datei `Baureihe J&JK FGI-Simulator.bat` zu starten.
+> Der Simulator ist über die im Kernverzeichnis beigelegte Batch-Datei `Baureihe J&JK FGI-Simulator.bat` zu starten.\
+> Für Linux-Nutzer und macOS-Nutzer befindet sich eine zusätzliche kurze Anleitung im Kernverzeichnis des Projektes.
 >
 > Hierfür wird sowohl Python als auch Node.js benötigt. Zusätzliche Abhängigkeiten werden automatisch installiert und überprüft.
 
@@ -78,10 +79,14 @@ In folgender Tabelle sind alle verwendbaren Linien sowie eine kurze Beschreibung
 | Gezeigte Linienbez. | Einzugebene Linienbez. | Beschreibung |
 | ------------- | ------------- | ------------- |
 | **U1 - U9** | `U1` `U2` `U3` `U4` `U5` `U6` `U7` `U8` `U9` | Standardlinien. |
+| **U1** | `U1+` | Alternative Linienführung nach Ruhleben. |
 | **U2** | `U2+` | Fiktive Verlängerung nach Rathaus Spandau. |
+| **U2** | `U2MH` | Erhalt des Stationsnamen Mohrenstraße. |
 | **U3** | `U3+` | Fiktive Verlängerung zum Mexikoplatz. |
 | **U5** | `U5+` | Fiktive Verlängerung nach Urban Tech Republic, basiert auf fiktive U55 von U-Bahn Sim Berlin's Trainz Simulator 2009 Add-On. |
 | **U6** | `U6+` | Erhalt der geschlossenen Station Französische Straße. |
+| **U7** | `U7+` | Fiktive Verlängerung nach Flughafen BER. |
+| **U8** | `U8+` | Fiktive Verlängerung nach Senftenberger Ring. |
 | **U12** | `U12` | Umfahrungslinie für Bauarbeiten bestehend aus U1 und U2. |
 | **U15** | `U15` | Alternative Linienbezeichnung für die U1. |
 | **U2** | `U23` | Linienführung für damalige U2-Einsetzer aus Fehrbelliner Platz kommend. |
