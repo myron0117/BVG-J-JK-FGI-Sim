@@ -767,6 +767,27 @@
 >
 
 <button
+  id="routeStartEndSwapButton"
+  class="buttonDefault"
+  onclick="send('')"
+  style="
+    position: relative;
+    top: 260px;
+    left: 1284px;
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  "
+  onmouseover="this.style.backgroundColor='#D2D2D2'; this.style.color='#252525';"
+  onmouseout="this.style.backgroundColor='#FFFFFF'; this.style.color='#252525';"
+  onmousedown="this.style.backgroundColor='#252525'; this.style.color='#FFFFFF'; this.style.border='4px solid #FFFFFF'; this.style.transform='scale(1)';"
+  onmouseup="this.style.backgroundColor='#D2D2D2'; this.style.color='#252525'; this.style.border='4px solid #D2D2D2'; this.style.transform='scale(1)';"
+>
+<span style="position: absolute; top: 2px; left: 0; right: 0; text-align: center;">→</span>
+<span style="position: absolute; bottom: -2px; left: 0; right: 0; text-align: center;">←</span>
+</button>
+
+<button
   id="routeConfirmButton"
   class="buttonDefault"
   onclick="send('confirm')"
@@ -1574,6 +1595,377 @@ document.addEventListener('DOMContentLoaded', function () {
         if (route) ch.postMessage({ type: 'routeUpdate', state: route });
     };
 });
+</script>
+
+
+
+<!-- Picture in Picture -->
+
+<script>
+(function () {
+    const pipSupported = 'documentPictureInPicture' in window;
+
+    const DISPLAYS = [
+        { key: 'info', rootSelector: '.information-display', externPage: 'FahrgastinformationExtern.html',
+          nativeW: 1920, nativeH: 1080,
+          targetInnerW: 960, targetInnerH: 540 },
+        { key: 'dir', rootSelector: '.direction-display', externPage: 'RichtungsanzeigeExtern.html',
+          nativeW: 1920, nativeH: 248,
+          targetInnerW: 960, targetInnerH: 124 }
+    ];
+
+    const openPips = new Map();
+
+    function deepClone(node) {
+        const clone = node.cloneNode(false);
+        if (node.shadowRoot) {
+            const sr = clone.attachShadow({ mode: 'open' });
+            for (let i = 0; i < node.shadowRoot.childNodes.length; i++) {
+                sr.appendChild(deepClone(node.shadowRoot.childNodes[i]));
+            }
+        }
+        for (let i = 0; i < node.childNodes.length; i++) {
+            clone.appendChild(deepClone(node.childNodes[i]));
+        }
+        return clone;
+    }
+
+    async function requestPipWindow(cfg, useIframe) {
+        // Per spec, these are the inner (content) dimensions.
+        const reqW = cfg.targetInnerW;
+        const reqH = cfg.targetInnerH;
+
+        if (!useIframe) {
+            const pip = await documentPictureInPicture.requestWindow({
+                width: reqW, height: reqH
+            });
+            return { pip, host: null };
+        }
+        const iframe = document.createElement('iframe');
+        iframe.style.cssText = 'position:fixed;left:-10000px;top:-10000px;width:1px;height:1px;border:0;visibility:hidden;';
+        iframe.src = 'about:blank';
+        document.body.appendChild(iframe);
+        const iframeWin = iframe.contentWindow;
+        if (!iframeWin || !('documentPictureInPicture' in iframeWin)) {
+            iframe.remove();
+            throw new Error('Document PiP not available in iframe');
+        }
+        const pip = await iframeWin.documentPictureInPicture.requestWindow({
+            width: reqW, height: reqH
+        });
+        return { pip, host: iframe };
+    }
+
+    async function openInPip(cfg) {
+        if (!pipSupported) {
+            const id = Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+            window.open(cfg.externPage + '?id=' + id, '_blank');
+            return;
+        }
+
+        if (openPips.has(cfg.key)) {
+            const entry = openPips.get(cfg.key);
+            if (entry && entry.pip && !entry.pip.closed) {
+                try { entry.pip.focus(); } catch (_) {}
+                return;
+            }
+            if (entry && entry.host) entry.host.remove();
+            openPips.delete(cfg.key);
+        }
+
+        const source = document.querySelector(cfg.rootSelector);
+        if (!source) return;
+
+        const anyPipOpen = [...openPips.values()].some(e => e.pip && !e.pip.closed);
+        const useIframe = anyPipOpen;
+
+        let pip, host;
+        try {
+            const res = await requestPipWindow(cfg, useIframe);
+            pip = res.pip; host = res.host;
+        } catch (e) {
+            console.warn('[PiP] requestWindow failed:', e);
+            return;
+        }
+
+        openPips.set(cfg.key, { pip, host });
+
+        // ============================================================
+        //  AUTO-RESIZE: wait for the first real layout, then correct.
+        //  The first `resize` event on the PiP window fires once the
+        //  browser has finished positioning the window and adding its
+        //  chrome, so outer/inner dimensions are finally accurate.
+        // ============================================================
+        const tryAutoResize = () => {
+            const outerW = pip.outerWidth;
+            const outerH = pip.outerHeight;
+            const innerW = pip.innerWidth;
+            const innerH = pip.innerHeight;
+            const chromeW = outerW - innerW;
+            const chromeH = outerH - innerH;
+
+            const targetOuterW = cfg.targetInnerW + (chromeW > 0 ? chromeW : 16);
+            const targetOuterH = cfg.targetInnerH + (chromeH > 0 ? chromeH : 42);
+
+            console.log('[PiP] auto-resize attempt:',
+                { outerW, outerH, innerW, innerH, chromeW, chromeH,
+                  targetOuterW, targetOuterH });
+
+            if (Math.abs(outerW - targetOuterW) <= 2 &&
+                Math.abs(outerH - targetOuterH) <= 2) {
+                console.log('[PiP] auto-resize not needed');
+                return;
+            }
+
+            try {
+                pip.resizeTo(targetOuterW, targetOuterH);
+                console.log('[PiP] auto-resize sent');
+            } catch (e) {
+                console.log('[PiP] auto-resize blocked (click overlay to fix):', e.message);
+            }
+        };
+
+        let autoResizeDone = false;
+        const onFirstResize = () => {
+            if (autoResizeDone) return;
+            autoResizeDone = true;
+            pip.removeEventListener('resize', onFirstResize);
+            tryAutoResize();
+        };
+        pip.addEventListener('resize', onFirstResize);
+
+        // Safety net: if no resize event ever fires (e.g. the initial size
+        // already matched), try once after a short delay. Still within the
+        // activation window because the delay is small.
+        setTimeout(() => {
+            if (!autoResizeDone) {
+                autoResizeDone = true;
+                pip.removeEventListener('resize', onFirstResize);
+                tryAutoResize();
+            }
+        }, 80);
+        // ============================================================
+        // ============================================================
+
+        const base = pip.document.createElement('base');
+        base.href = document.baseURI;
+        pip.document.head.appendChild(base);
+
+        // ... rest of the function unchanged ...
+
+        [...document.styleSheets].forEach(sheet => {
+            try {
+                const rules = [...sheet.cssRules].map(r => r.cssText).join('\n');
+                const style = pip.document.createElement('style');
+                style.textContent = rules;
+                pip.document.head.appendChild(style);
+            } catch (e) {
+                if (sheet.href) {
+                    const link = pip.document.createElement('link');
+                    link.rel = 'stylesheet';
+                    link.href = sheet.href;
+                    pip.document.head.appendChild(link);
+                }
+            }
+        });
+
+        const override = pip.document.createElement('style');
+        override.textContent = `
+            html, body {
+                margin: 0; padding: 0;
+                width: 100%; height: 100%;
+                overflow: hidden;
+                background: #252525;
+            }
+            #pip-stage {
+                position: absolute; inset: 0;
+                overflow: hidden;
+            }
+            #pip-stage .information-display,
+            #pip-stage .direction-display {
+                zoom: 1 !important;
+                transform-origin: top left !important;
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+            }
+            #pip-stage * {
+                pointer-events: none !important;
+                user-select: none !important;
+                -webkit-user-select: none !important;
+                cursor: default !important;
+            }
+            #pip-resize-overlay {
+                position: absolute; inset: 0;
+                z-index: 2147483647;
+                background: transparent;
+                cursor: pointer;
+            }
+        `;
+        pip.document.head.appendChild(override);
+
+        const stage = pip.document.createElement('div');
+        stage.id = 'pip-stage';
+        pip.document.body.appendChild(stage);
+
+        const resizeOverlay = pip.document.createElement('div');
+        resizeOverlay.id = 'pip-resize-overlay';
+        pip.document.body.appendChild(resizeOverlay);
+
+        let currentClone = null;
+
+        function applyTransform() {
+            if (!currentClone) return;
+            const w = pip.innerWidth;
+            const h = pip.innerHeight;
+            const scale = Math.min(w / cfg.nativeW, h / cfg.nativeH);
+            const sw = cfg.nativeW * scale;
+            const sh = cfg.nativeH * scale;
+            currentClone.style.transform = `scale(${scale})`;
+            currentClone.style.left = `${(w - sw) / 2}px`;
+            currentClone.style.top  = `${(h - sh) / 2}px`;
+        }
+
+        function refresh() {
+            const clone = deepClone(source);
+            clone.querySelectorAll('.popout-overlay-marker').forEach(el => el.remove());
+            clone.querySelectorAll('[onclick]').forEach(el => el.removeAttribute('onclick'));
+            clone.querySelectorAll('[onmouseover]').forEach(el => el.removeAttribute('onmouseover'));
+            clone.querySelectorAll('[onmouseout]').forEach(el => el.removeAttribute('onmouseout'));
+            clone.querySelectorAll('[onmousedown]').forEach(el => el.removeAttribute('onmousedown'));
+            clone.querySelectorAll('[onmouseup]').forEach(el => el.removeAttribute('onmouseup'));
+            clone.style.transformOrigin = 'top left';
+            clone.style.position = 'absolute';
+            stage.replaceChildren(clone);
+            currentClone = clone;
+            applyTransform();
+        }
+
+        function syncTheme() {
+            const isDark = document.body.classList.contains('dark-mode');
+            pip.document.body.classList.toggle('dark-mode', isDark);
+        }
+
+        syncTheme();
+        refresh();
+
+        const syncTimer = setInterval(() => {
+            syncTheme();
+            refresh();
+        }, 200);
+
+        // ---------- Click-to-snap to fixed target size ----------
+        // ---------- Click-to-snap to fixed target size (iterative) ----------
+        function snapToTarget(ev) {
+            if (ev) { ev.preventDefault(); ev.stopPropagation(); }
+
+            const MAX_ATTEMPTS = 6;
+            let attempt = 0;
+
+            function tryOnce() {
+                const outerW = pip.outerWidth  || pip.innerWidth;
+                const outerH = pip.outerHeight || pip.innerHeight;
+                const innerW = pip.innerWidth;
+                const innerH = pip.innerHeight;
+
+                const deltaW = cfg.targetInnerW - innerW;
+                const deltaH = cfg.targetInnerH - innerH;
+
+                console.log('[PiP] snap attempt', attempt,
+                    { outerW, outerH, innerW, innerH, deltaW, deltaH });
+
+                // Converged: inner dimensions match target within 1px
+                if (Math.abs(deltaW) <= 1 && Math.abs(deltaH) <= 1) {
+                    console.log('[PiP] snap converged after', attempt, 'attempts');
+                    applyTransform();
+                    return;
+                }
+
+                // Compute the outer size we need in order to get the target inner size.
+                // Because outer - inner = chrome, adding delta to outer adds delta to inner.
+                const targetOuterW = outerW + deltaW;
+                const targetOuterH = outerH + deltaH;
+
+                try {
+                    pip.resizeTo(targetOuterW, targetOuterH);
+                } catch (e) {
+                    console.warn('[PiP] resizeTo failed on attempt', attempt, e);
+                    applyTransform();
+                    return;
+                }
+
+                attempt++;
+                if (attempt < MAX_ATTEMPTS) {
+                    setTimeout(tryOnce, 40);
+                } else {
+                    console.warn('[PiP] snap reached max attempts without convergence');
+                    setTimeout(applyTransform, 60);
+                }
+            }
+
+            tryOnce();
+        }
+
+        resizeOverlay.addEventListener('click', snapToTarget);
+
+        pip.addEventListener('resize', applyTransform);
+
+        pip.addEventListener('pagehide', () => {
+            clearInterval(syncTimer);
+            const entry = openPips.get(cfg.key);
+            if (entry && entry.host) entry.host.remove();
+            openPips.delete(cfg.key);
+        });
+    }
+
+    DISPLAYS.forEach(cfg => {
+        const root = document.querySelector(cfg.rootSelector);
+        if (!root) return;
+        const overlay = root.querySelector(`[onclick*="${cfg.externPage}"]`);
+        if (!overlay) return;
+
+        overlay.classList.add('popout-overlay-marker');
+
+        overlay.removeAttribute('onclick');
+        overlay.removeAttribute('onmouseover');
+        overlay.removeAttribute('onmouseout');
+        overlay.removeAttribute('onmousedown');
+        overlay.removeAttribute('onmouseup');
+
+        const content = overlay.querySelector('.popout-overlay-content');
+        overlay.style.transition = 'background-color 0.1s ease';
+        overlay.addEventListener('mouseenter', () => {
+            overlay.style.backgroundColor = 'rgba(240, 215, 34, 0.8)';
+            if (content) content.style.opacity = '1';
+        });
+        overlay.addEventListener('mouseleave', () => {
+            overlay.style.backgroundColor = 'rgba(240, 215, 34, 0)';
+            if (content) content.style.opacity = '0';
+        });
+
+        overlay.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.shiftKey) {
+                openInPip(cfg);
+            } else {
+                const id = Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+                window.open(cfg.externPage + '?id=' + id, '_blank');
+            }
+        }, { capture: true });
+
+        overlay.addEventListener('mousedown', (e) => {
+            if (e.shiftKey) { e.preventDefault(); e.stopPropagation(); }
+        }, { capture: true });
+        overlay.addEventListener('mouseup', (e) => {
+            if (e.shiftKey) { e.preventDefault(); e.stopPropagation(); }
+        }, { capture: true });
+        overlay.addEventListener('auxclick', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        }, { capture: true });
+    });
+})();
 </script>
 
 </html>

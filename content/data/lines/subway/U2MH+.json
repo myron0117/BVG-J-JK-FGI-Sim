@@ -450,7 +450,7 @@
 
 
     {
-      "abbrev": "MH", "name": "Anton-Wilhelm-Amo-Straße", "additionalName": "", "directionPresence": "both",
+      "abbrev": "MH", "name": "Mohrenstraße", "additionalName": "", "directionPresence": "both",
       "exitSide":
       {
         "direction1": {"via": "left", "terminus": "left"},

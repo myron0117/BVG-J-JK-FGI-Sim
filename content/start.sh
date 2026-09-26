@@ -52,8 +52,49 @@ if ! $PYTHON_CMD -c "import keyboard, requests, websockets" >/dev/null 2>&1; the
     $PYTHON_CMD -m pip install keyboard requests websockets
 fi
 
+echo Node.js gefunden.                                 Node.js found.
 echo
-echo
+
+# --- Stop any previously running instance (only if one exists) ---
+if pgrep -f 'content/server.py' >/dev/null 2>&1; then
+    echo Vorherige Instanz gefunden, wird beendet...       Previous instance found, shutting down...
+    echo
+
+    stop_pidfile() {
+        local name="$1"
+        local pidfile="/tmp/${name}.pid"
+        [ -f "$pidfile" ] || return 0
+        local pid
+        pid="$(cat "$pidfile" 2>/dev/null || true)"
+        if [ -n "$pid" ]; then
+            # Children first (node may spawn workers, python may fork),
+            # then the parent.
+            pkill -TERM -P "$pid" 2>/dev/null || true
+            kill  -TERM   "$pid" 2>/dev/null || true
+        fi
+        rm -f "$pidfile"
+    }
+
+    stop_pidfile jjk_control
+    stop_pidfile jjk_server
+    stop_pidfile jjk_bvg-rest
+
+    # Give them a moment to exit cleanly.
+    sleep 1
+
+    # SIGKILL sweep for stragglers (pid files already removed above, so
+    # match by command pattern instead).
+    pkill -KILL -f 'content/server.py'  2>/dev/null || true
+    pkill -KILL -f 'content/control.py' 2>/dev/null || true
+    pkill -KILL -f 'bvg-rest-6.0.2'     2>/dev/null || true
+
+    # Clear the shutdown signal so the fresh keyboard control doesn't exit on it.
+    rm -f "content/shutdown.kb"
+
+    echo Vorherige Simulator-Instanz beendet.              Shut down previous Simulator instance.
+    echo
+fi
+
 echo
 echo ----------------------------------------------------------------------------------------------------
 echo

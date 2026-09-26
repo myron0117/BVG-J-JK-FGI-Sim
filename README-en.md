@@ -69,19 +69,27 @@ The language setting in the top right corner is part of the configuration and ca
 
 In the following table, all available lines are listed along with a short description.
 
-| Displayed Line Desig. | Entered Line Desig. | Description |
+| Displayed Line Designation | Entered Line Designation | Description |
 | ------------- | ------------- | ------------- |
 | **U1 - U9** | `U1` `U2` `U3` `U4` `U5` `U6` `U7` `U8` `U9` | Default lines. |
 | **U1** | `U1+` | Alternative route to Ruhleben. |
 | **U2** | `U2+` | Fictional extension to Rathaus Spandau. |
 | **U2** | `U2MH` | Preservation of the station name Mohrenstraße. |
+| **U2** | `U2MH+` | Fictional extension to Rathaus Spandau with preservation of the station name Mohrenstraße. |
 | **U3** | `U3+` | Fictional extension to Mexikoplatz. |
-| **U5** | `U5+` | Fictional extension to Urban Tech Republic, based on fictional U55 from U-Bahn Sim Berlin's Trainz Simulator 2009 Add-On. |
+| **U5** | `U5+` | Fictional extension to Tegelort, based on fictional U55 from U-Bahn Sim Berlin's Trainz Simulator 2009 Add-On. |
+| **U5** | `U5GK` | Preservation of the station name Neue Grottkauer Straße. |
+| **U5** | `U5GK+` | Fictional extension to Tegelort with preservation of the station name Neue Grottkauer Straße. |
 | **U6** | `U6+` | Preservation of the closed down station Französische Straße. |
 | **U7** | `U7+` | Fictional extension to BER Airport. |
 | **U8** | `U8+` | Fictional extension to Senftenberger Ring. |
+| **U10** | `U10` | Fictional line based on existing construction plans. |
+| **U10** | `U10+` | Fictional line based on existing construction plans with inclusion of Bülowstraße, not part of original planning. |
 | **U12** | `U12` | Bypass for construction works, consisting of U1 and U2. |
+| **U12** | `U12+` | Bypass for construction works, consisting of U1 and U2, with fictional extension to Rathaus Spandau. |
 | **U15** | `U15` | Alternative line designation for the U1. |
+| **U15** | `U15A` | Fuctional combined line consisting of U5 and U10 between Hönow and Drakestraße. |
+| **U15** | `U15B` | Fuctional combined line consisting of U5 (with Trainz extension) and U10 between Weißensee and Tegelort. |
 | **U2** | `U23` | Line routing for past U2 services starting from Fehrbelliner Platz. |
 | **U23** | `U23+` | Fictional combined line consisting of U2 and U3. |
 | **U55** | `U55` | Past Kanzlerlinie. |

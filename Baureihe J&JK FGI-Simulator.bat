@@ -52,8 +52,46 @@ if errorlevel 1 (
     %PYTHON_CMD% -m pip install keyboard requests websockets
 )
 
+REM ---------------------------------------------------------------
+REM Stop any previously running instance (only if one exists)
+REM ---------------------------------------------------------------
+tasklist /FI "WINDOWTITLE eq J/JK FGI-Sim - Lokaler Server / Local Server*" /NH 2>nul | find /I "cmd.exe" >nul
+if errorlevel 1 goto :no_old_instance
+
+echo Vorherige Instanz gefunden, wird beendet...       Previous instance found, shutting down...
 echo.
-echo.
+
+REM Rename our own window so the old-launcher kill below cannot match us.
+title J/JK FGI-Sim - Launcher (Duplicate)
+
+REM Old launcher window (matches the title set at the top of this file)
+taskkill /FI "WINDOWTITLE eq Baureihe J/JK FGI-Simulator - Launcher" /T /F >nul 2>&1
+
+REM Old bvg-rest window
+taskkill /FI "WINDOWTITLE eq J/JK FGI-Sim - bvg-rest-6.0.2*" /T /F >nul 2>&1
+
+REM Old local Python server window
+taskkill /FI "WINDOWTITLE eq J/JK FGI-Sim - Lokaler Server / Local Server*" /T /F >nul 2>&1
+
+REM Old keyboard control: signal via the file it watches, plus a
+REM title-based fallback identical to the normal shutdown.
+if exist "content\shutdown.kb" del "content\shutdown.kb"
+echo > "content\shutdown.kb"
+taskkill /FI "WINDOWTITLE eq J/JK FGI-Sim - Tastatursteuerung / Keyboard Control*" /T /F >nul 2>&1
+
+REM Give the OS a moment to release ports 7001/7003 and file handles.
+timeout /t 1 >nul
+
+REM Drop the shutdown signal so the fresh control.py doesn't exit on it.
+if exist "content\shutdown.kb" del "content\shutdown.kb"
+
+REM Restore our own window title.
+title Baureihe J/JK FGI-Simulator - Launcher
+
+echo Vorherige Simulator-Instanz beendet.              Shut down previous Simulator instance.
+
+:no_old_instance
+
 echo.
 echo ----------------------------------------------------------------------------------------------------
 echo.

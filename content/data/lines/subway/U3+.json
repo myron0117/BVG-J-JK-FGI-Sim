@@ -568,7 +568,7 @@
         "direction2": {"via": "left", "terminus": "left"}
       },
       "connectingServices":
-      {"lineSimple": [[], []], "lineExtended": [[], [], []]},
+      {"lineSimple": [["U7"], []], "lineExtended": [["U7"], [], []]},
       "stationExits":
       {
         "direction1":

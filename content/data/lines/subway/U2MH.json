@@ -901,12 +901,12 @@
         "direction2": {"via": "right", "terminus": "right"}
       },
       "connectingServices":
-      {"lineSimple": [[], []], "lineExtended": [[], [], []]},
+      {"lineSimple": [["sbahn"], []], "lineExtended": [["sbahn"], [], []]},
       "stationExits":
       {
         "direction1":
         {
-          "frontEnd": [["exit"], []],
+          "frontEnd": [["exit"], ["sbahn"]],
           "frontUp": [[], []],
           "frontMiddle": [[], []],
           "middleUp": [[], []],
@@ -922,7 +922,7 @@
           "middleUp": [[], []],
           "backMiddle": [[], []],
           "backUp": [[], []],
-          "backEnd": [["exit"], []]
+          "backEnd": [["exit"], ["sbahn"]]
         }
       },
       "apiID": "900026202"

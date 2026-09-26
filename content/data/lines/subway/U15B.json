@@ -1,12 +1,12 @@
 {
-  "line": "U5",
-  "color": "7e5330",
+  "line": "U15B",
+  "color": ["252525", "7e5330"],
   "stations": [
 
 
 
     {
-      "abbrev": "Hö", "name": "Hönow", "additionalName": "", "directionPresence": "both",
+      "abbrev": "WES", "name": "Weißensee", "additionalName": "", "directionPresence": "both",
       "exitSide":
       {
         "direction1": {"via": "", "terminus": "random"},
@@ -18,32 +18,32 @@
       {
         "direction1":
         {
-          "frontEnd": [["exit", "A"], []],
+          "frontEnd": [["exit", "C", "D", "lift1"], ["bus"]],
           "frontUp": [[], []],
           "frontMiddle": [[], []],
           "middleUp": [[], []],
           "backMiddle": [[], []],
           "backUp": [[], []],
-          "backEnd": [["exit", "B", "C", "ramp"], ["bus"]]
+          "backEnd": [["exit", "A", "B"], []]
         },
         "direction2":
         {
-          "frontEnd": [["exit", "B", "C", "ramp"], ["bus"]],
+          "frontEnd": [["exit", "A", "B"], []],
           "frontUp": [[], []],
           "frontMiddle": [[], []],
           "middleUp": [[], []],
           "backMiddle": [[], []],
           "backUp": [[], []],
-          "backEnd": [["exit", "A"], []]
+          "backEnd": [["exit", "C", "D", "lift1"], ["bus"]]
         }
       },
-      "apiID": "900175010"
+      "apiID": "900140513"
     },
 
 
 
     {
-      "abbrev": "LL", "name": "Louis-Lewin-Straße", "additionalName": "", "directionPresence": "both",
+      "abbrev": "FKB", "name": "Falkenberger Straße", "additionalName": "", "directionPresence": "both",
       "exitSide":
       {
         "direction1": {"via": "left", "terminus": "left"},
@@ -55,69 +55,32 @@
       {
         "direction1":
         {
-          "frontEnd": [["exit", "A"], []],
+          "frontEnd": [["exit", "C", "D"], []],
           "frontUp": [[], []],
           "frontMiddle": [[], []],
           "middleUp": [[], []],
           "backMiddle": [[], []],
           "backUp": [[], []],
-          "backEnd": [["exit", "B", "C", "ramp"], ["bus"]]
+          "backEnd": [["exit", "A", "B", "lift1"], ["tram", "bus"]]
         },
         "direction2":
         {
-          "frontEnd": [["exit", "B", "C", "ramp"], ["bus"]],
+          "frontEnd": [["exit", "A", "B", "lift1"], ["tram", "bus"]],
           "frontUp": [[], []],
           "frontMiddle": [[], []],
           "middleUp": [[], []],
           "backMiddle": [[], []],
           "backUp": [[], []],
-          "backEnd": [["exit", "A"], []]
+          "backEnd": [["exit", "C", "D"], []]
         }
       },
-      "apiID": "900175015"
+      "apiID": "900140012"
     },
 
 
 
     {
-      "abbrev": "HD", "name": "Hellersdorf", "additionalName": "", "directionPresence": "both",
-      "exitSide":
-      {
-        "direction1": {"via": "left", "terminus": "left"},
-        "direction2": {"via": "left", "terminus": "left"}
-      },
-      "connectingServices":
-      {"lineSimple": [[], []], "lineExtended": [[], [], []]},
-      "stationExits":
-      {
-        "direction1":
-        {
-          "frontEnd": [["exit", "A-D", "ramp", "infocenter"], ["tram", "bus"]],
-          "frontUp": [[], []],
-          "frontMiddle": [[], []],
-          "middleUp": [[], []],
-          "backMiddle": [[], []],
-          "backUp": [[], []],
-          "backEnd": [["exit", "E", "F"], []]
-        },
-        "direction2":
-        {
-          "frontEnd": [["exit", "E", "F"], []],
-          "frontUp": [[], []],
-          "frontMiddle": [[], []],
-          "middleUp": [[], []],
-          "backMiddle": [[], []],
-          "backUp": [[], []],
-          "backEnd": [["exit", "A-D", "ramp", "infocenter"], ["tram", "bus"]]
-        }
-      },
-      "apiID": "900175007"
-    },
-
-
-
-    {
-      "abbrev": "C", "name": "Cottbusser Platz", "additionalName": "", "directionPresence": "both",
+      "abbrev": "GRS", "name": "Gürtelstraße", "additionalName": "", "directionPresence": "both",
       "exitSide":
       {
         "direction1": {"via": "left", "terminus": "left"},
@@ -131,9 +94,9 @@
         {
           "frontEnd": [[], []],
           "frontUp": [[], []],
-          "frontMiddle": [["exit", "A-D"], ["bus"]],
-          "middleUp": [[], []],
-          "backMiddle": [["exit", "A-D", "ramp"], ["bus"]],
+          "frontMiddle": [["exit"], []],
+          "middleUp": [["exit", "A-D", "lift1"], []],
+          "backMiddle": [["exit"], []],
           "backUp": [[], []],
           "backEnd": [[], []]
         },
@@ -141,172 +104,98 @@
         {
           "frontEnd": [[], []],
           "frontUp": [[], []],
-          "frontMiddle": [["exit", "A-D", "ramp"], ["bus"]],
-          "middleUp": [[], []],
-          "backMiddle": [["exit", "A-D"], ["bus"]],
+          "frontMiddle": [["exit"], []],
+          "middleUp": [["exit", "A-D", "lift1"], []],
+          "backMiddle": [["exit"], []],
           "backUp": [[], []],
           "backEnd": [[], []]
         }
       },
-      "apiID": "900175006"
+      "apiID": "00000000"
     },
 
 
 
     {
-      "abbrev": "GK", "name": "Kienberg", "additionalName": "Gärten der Welt", "directionPresence": "both",
+      "abbrev": "GRW", "name": "Greifswalder Straße", "additionalName": "", "directionPresence": "both",
       "exitSide":
       {
         "direction1": {"via": "left", "terminus": "left"},
         "direction2": {"via": "left", "terminus": "left"}
       },
       "connectingServices":
-      {"lineSimple": [[], []], "lineExtended": [[], [], []]},
-      "stationExits":
-      {
-        "direction1":
-        {
-          "frontEnd": [["exit", "C"], ["bus"]],
-          "frontUp": [[], []],
-          "frontMiddle": [[], []],
-          "middleUp": [[], []],
-          "backMiddle": [[], []],
-          "backUp": [[], []],
-          "backEnd": [["exit", "A", "B", "lift1"], []]
-        },
-        "direction2":
-        {
-          "frontEnd": [["exit", "A", "B", "lift1"], []],
-          "frontUp": [[], []],
-          "frontMiddle": [[], []],
-          "middleUp": [[], []],
-          "backMiddle": [[], []],
-          "backUp": [[], []],
-          "backEnd": [["exit", "C"], ["bus"]]
-        }
-      },
-      "apiID": "900175005"
-    },
-
-
-
-    {
-      "abbrev": "KL", "name": "Kaulsdorf-Nord", "additionalName": "", "directionPresence": "both",
-      "exitSide":
-      {
-        "direction1": {"via": "left", "terminus": "left"},
-        "direction2": {"via": "left", "terminus": "left"}
-      },
-      "connectingServices":
-      {"lineSimple": [[], []], "lineExtended": [[], [], []]},
+      {"lineSimple": [["sbahn"], []], "lineExtended": [["sbahn"], [], []]},
       "stationExits":
       {
         "direction1":
         {
           "frontEnd": [[], []],
-          "frontUp": [[], []],
-          "frontMiddle": [["exit", "B"], ["bus"]],
+          "frontUp": [["exit", "D", "E", "lift1"], ["sbahn", "tram"]],
+          "frontMiddle": [[], []],
           "middleUp": [[], []],
           "backMiddle": [[], []],
           "backUp": [[], []],
-          "backEnd": [["exit", "A", "ramp"], []]
+          "backEnd": [["exit", "A-C"], ["bus"]]
         },
         "direction2":
         {
-          "frontEnd": [["exit", "A", "ramp"], []],
+          "frontEnd": [["exit", "A-C"], ["bus"]],
           "frontUp": [[], []],
           "frontMiddle": [[], []],
           "middleUp": [[], []],
-          "backMiddle": [["exit", "B"], ["bus"]],
-          "backUp": [[], []],
+          "backMiddle": [[], []],
+          "backUp": [["exit", "D", "E", "lift1"], ["sbahn", "tram"]],
           "backEnd": [[], []]
         }
       },
-      "apiID": "900175004"
+      "apiID": "900110003"
     },
 
 
 
     {
-      "abbrev": "Wh", "name": "Wuhletal", "additionalName": "", "directionPresence": "both",
+      "abbrev": "DZS", "name": "Danziger Straße", "additionalName": "", "directionPresence": "both",
       "exitSide":
       {
         "direction1": {"via": "right", "terminus": "right"},
         "direction2": {"via": "right", "terminus": "right"}
       },
       "connectingServices":
-      {"lineSimple": [["sbahn"], []], "lineExtended": [["sbahn"], [], []]},
-      "stationExits":
-      {
-        "direction1":
-        {
-          "frontEnd": [["exit", "A", "B"], ["bus"]],
-          "frontUp": [[], ["sbahn"]],
-          "frontMiddle": [[], []],
-          "middleUp": [[], ["sbahn"]],
-          "backMiddle": [[], []],
-          "backUp": [[], ["sbahn"]],
-          "backEnd": [["exit", "C"], ["bus"]]
-        },
-        "direction2":
-        {
-          "frontEnd": [["exit", "C"], ["bus"]],
-          "frontUp": [[], ["sbahn"]],
-          "frontMiddle": [[], []],
-          "middleUp": [[], ["sbahn"]],
-          "backMiddle": [[], []],
-          "backUp": [[], ["sbahn"]],
-          "backEnd": [["exit", "A", "B"], ["bus"]]
-        }
-      },
-      "apiID": "900175001"
-    },
-
-
-
-    {
-      "abbrev": "E", "name": "Elsterwerdaer Platz", "additionalName": "", "directionPresence": "both",
-      "exitSide":
-      {
-        "direction1": {"via": "left", "terminus": "left"},
-        "direction2": {"via": "left", "terminus": "left"}
-      },
-      "connectingServices":
-      {"lineSimple": [["jelbi"], []], "lineExtended": [["jelbi"], [], []]},
+      {"lineSimple": [[], []], "lineExtended": [[], [], []]},
       "stationExits":
       {
         "direction1":
         {
           "frontEnd": [[], []],
-          "frontUp": [[], []],
+          "frontUp": [["exit", "D"], []],
           "frontMiddle": [[], []],
-          "middleUp": [[], []],
+          "middleUp": [["exit", "B", "C", "lift1"], ["tram", "bus"]],
           "backMiddle": [[], []],
-          "backUp": [[], []],
-          "backEnd": [["exit", "A", "B", "ramp"], ["bus", "jelbi"]]
+          "backUp": [["exit", "A"], []],
+          "backEnd": [[], []]
         },
         "direction2":
         {
-          "frontEnd": [["exit", "A", "B", "ramp"], ["bus", "jelbi"]],
-          "frontUp": [[], []],
+          "frontEnd": [[], []],
+          "frontUp": [["exit", "E"], []],
           "frontMiddle": [[], []],
-          "middleUp": [[], []],
+          "middleUp": [["exit", "F", "G", "lift2"], ["tram", "bus"]],
           "backMiddle": [[], []],
-          "backUp": [[], []],
+          "backUp": [["exit", "H"], []],
           "backEnd": [[], []]
         }
       },
-      "apiID": "900171006"
+      "apiID": "900110020"
     },
 
 
 
     {
-      "abbrev": "Bü", "name": "Biesdorf-Süd", "additionalName": "", "directionPresence": "both",
+      "abbrev": "MAR", "name": "Marienburger Straße", "additionalName": "", "directionPresence": "both",
       "exitSide":
       {
-        "direction1": {"via": "right", "terminus": "left"},
-        "direction2": {"via": "left", "terminus": "right"}
+        "direction1": {"via": "left", "terminus": "left"},
+        "direction2": {"via": "left", "terminus": "left"}
       },
       "connectingServices":
       {"lineSimple": [[], []], "lineExtended": [[], [], []]},
@@ -315,428 +204,95 @@
         "direction1":
         {
           "frontEnd": [[], []],
-          "frontUp": [[], []],
+          "frontUp": [["exit", "C", "D", "lift1"], ["tram"]],
           "frontMiddle": [[], []],
           "middleUp": [[], []],
           "backMiddle": [[], []],
           "backUp": [[], []],
-          "backEnd": [["exit", "A-C", "ramp"], []]
+          "backEnd": [["exit", "A", "B"], []]
         },
         "direction2":
-        {
-          "frontEnd": [["exit", "A-C", "ramp"], []],
-          "frontUp": [[], []],
-          "frontMiddle": [[], []],
-          "middleUp": [[], []],
-          "backMiddle": [[], []],
-          "backUp": [[], []],
-          "backEnd": [[], []]
-        }
-      },
-      "apiID": "900171005"
-    },
-
-
-
-    {
-      "abbrev": "Tk", "name": "Tierpark", "additionalName": "", "directionPresence": "both",
-      "exitSide":
-      {
-        "direction1": {"via": "left", "terminus": "left"},
-        "direction2": {"via": "left", "terminus": "left"}
-      },
-      "connectingServices":
-      {"lineSimple": [[], []], "lineExtended": [[], [], []]},
-      "stationExits":
-      {
-        "direction1":
-        {
-          "frontEnd": [["exit", "A-D"], []],
-          "frontUp": [[], []],
-          "frontMiddle": [[], []],
-          "middleUp": [[], []],
-          "backMiddle": [[], []],
-          "backUp": [["exit", "lift1"], []],
-          "backEnd": [["exit", "E-H"], ["tram", "bus"]]
-        },
-        "direction2":
-        {
-          "frontEnd": [["exit", "E-H"], ["tram", "bus"]],
-          "frontUp": [["exit", "lift1"], []],
-          "frontMiddle": [[], []],
-          "middleUp": [[], []],
-          "backMiddle": [[], []],
-          "backUp": [[], []],
-          "backEnd": [["exit", "A-D"], []]
-        }
-      },
-      "apiID": "900161002"
-    },
-
-
-
-    {
-      "abbrev": "Fi", "name": "Friedrichsfelde", "additionalName": "", "directionPresence": "both",
-      "exitSide":
-      {
-        "direction1": {"via": "left", "terminus": "left"},
-        "direction2": {"via": "left", "terminus": "left"}
-      },
-      "connectingServices":
-      {"lineSimple": [[], []], "lineExtended": [[], [], []]},
-      "stationExits":
-      {
-        "direction1":
-        {
-          "frontEnd": [["exit", "A"], ["bus"]],
-          "frontUp": [[], []],
-          "frontMiddle": [[], []],
-          "middleUp": [[], []],
-          "backMiddle": [[], []],
-          "backUp": [["exit", "lift1"], []],
-          "backEnd": [["exit", "B"], ["bus"]]
-        },
-        "direction2":
-        {
-          "frontEnd": [["exit", "B"], ["bus"]],
-          "frontUp": [["exit", "lift1"], []],
-          "frontMiddle": [[], []],
-          "middleUp": [[], []],
-          "backMiddle": [[], []],
-          "backUp": [[], []],
-          "backEnd": [["exit", "A"], ["bus"]]
-        }
-      },
-      "apiID": "900161512"
-    },
-
-
-
-    {
-      "abbrev": "Li", "name": "Lichtenberg", "additionalName": "", "directionPresence": "both",
-      "exitSide":
-      {
-        "direction1": {"via": "left", "terminus": "left"},
-        "direction2": {"via": "left", "terminus": "left"}
-      },
-      "connectingServices":
-      {"lineSimple": [["fernverkehr", "bahn", "sbahn"], ["jelbi"]], "lineExtended": [["fernverkehr", "bahn"], ["sbahn"], ["jelbi"]]},
-      "stationExits":
-      {
-        "direction1":
-        {
-          "frontEnd": [[], []],
-          "frontUp": [[], []],
-          "frontMiddle": [["exit", "F-H", "lift2", "lift3"], ["tram", "bus"]],
-          "middleUp": [["exit", "infocenter"], ["bahn", "sbahn"]],
-          "backMiddle": [[], []],
-          "backUp": [[], []],
-          "backEnd": [["exit", "D", "E", "WC"], ["bahn", "sbahn", "bus", "jelbi"]]
-        },
-        "direction2":
-        {
-          "frontEnd": [["exit", "D", "E", "WC"], ["bahn", "sbahn", "bus", "jelbi"]],
-          "frontUp": [[], []],
-          "frontMiddle": [[], []],
-          "middleUp": [["exit", "infocenter"], ["bahn", "sbahn"]],
-          "backMiddle": [["exit", "F-H"], ["tram", "bus"]],
-          "backUp": [[], []],
-          "backEnd": [["exit", "lift2", "lift3"], []]
-        }
-      },
-      "apiID": "900160004"
-    },
-
-
-
-    {
-      "abbrev": "Md", "name": "Magdalenenstraße", "additionalName": "", "directionPresence": "both",
-      "exitSide":
-      {
-        "direction1": {"via": "left", "terminus": "left"},
-        "direction2": {"via": "left", "terminus": "left"}
-      },
-      "connectingServices":
-      {"lineSimple": [[], []], "lineExtended": [[], [], []]},
-      "stationExits":
-      {
-        "direction1":
         {
           "frontEnd": [["exit", "A", "B"], []],
           "frontUp": [[], []],
           "frontMiddle": [[], []],
           "middleUp": [[], []],
           "backMiddle": [[], []],
-          "backUp": [["exit", "lift1"], []],
-          "backEnd": [["exit", "C", "D"], ["bus"]]
-        },
-        "direction2":
+          "backUp": [["exit", "C", "D", "lift1"], ["tram"]],
+          "backEnd": [[], []]
+        }
+      },
+      "apiID": "900110521"
+    },
+
+
+
+    {
+      "abbrev": "FHN", "name": "Am Friedrichshain", "additionalName": "", "directionPresence": "both",
+      "exitSide":
+      {
+        "direction1": {"via": "left", "terminus": "left"},
+        "direction2": {"via": "left", "terminus": "left"}
+      },
+      "connectingServices":
+      {"lineSimple": [[], []], "lineExtended": [[], [], []]},
+      "stationExits":
+      {
+        "direction1":
         {
-          "frontEnd": [["exit", "C", "D"], ["bus"]],
-          "frontUp": [["exit", "lift1"], []],
+          "frontEnd": [["exit", "C", "D", "lift1"], ["tram", "bus"]],
+          "frontUp": [[], []],
           "frontMiddle": [[], []],
           "middleUp": [[], []],
           "backMiddle": [[], []],
           "backUp": [[], []],
           "backEnd": [["exit", "A", "B"], []]
-        }
-      },
-      "apiID": "900160005"
-    },
-
-
-
-    {
-      "abbrev": "Ff", "name": "Frankfurter Allee", "additionalName": "", "directionPresence": "both",
-      "exitSide":
-      {
-        "direction1": {"via": "left", "terminus": "left"},
-        "direction2": {"via": "left", "terminus": "left"}
-      },
-      "connectingServices":
-      {"lineSimple": [["sbahn"], []], "lineExtended": [["sbahn"], [], []]},
-      "stationExits":
-      {
-        "direction1":
-        {
-          "frontEnd": [[], []],
-          "frontUp": [[], []],
-          "frontMiddle": [["exit", "C", "D"], []],
-          "middleUp": [["exit", "lift2"], ["sbahn"]],
-          "backMiddle": [["exit", "C", "D"], []],
-          "backUp": [[], []],
-          "backEnd": [["exit", "E", "F", "infocenter", "WC"], ["tram", "bus"]]
         },
         "direction2":
-        {
-          "frontEnd": [["exit", "E", "F", "infocenter", "WC"], ["tram", "bus"]],
-          "frontUp": [[], []],
-          "frontMiddle": [["exit", "C", "D"], []],
-          "middleUp": [["exit", "lift2"], ["sbahn"]],
-          "backMiddle": [["exit", "C", "D"], []],
-          "backUp": [[], []],
-          "backEnd": [[], []]
-        }
-      },
-      "apiID": "900120001"
-    },
-
-
-
-    {
-      "abbrev": "Sa", "name": "Samariterstraße", "additionalName": "", "directionPresence": "both",
-      "exitSide":
-      {
-        "direction1": {"via": "left", "terminus": "left"},
-        "direction2": {"via": "left", "terminus": "left"}
-      },
-      "connectingServices":
-      {"lineSimple": [[], []], "lineExtended": [[], [], []]},
-      "stationExits":
-      {
-        "direction1":
-        {
-          "frontEnd": [["exit", "A", "B"], []],
-          "frontUp": [[], []],
-          "frontMiddle": [[], []],
-          "middleUp": [[], []],
-          "backMiddle": [["exit", "lift1"], []],
-          "backUp": [[], []],
-          "backEnd": [["exit", "C", "D"], ["bus"]]
-        },
-        "direction2":
-        {
-          "frontEnd": [["exit", "C", "D"], ["bus"]],
-          "frontUp": [[], []],
-          "frontMiddle": [["exit", "lift1"], []],
-          "middleUp": [[], []],
-          "backMiddle": [[], []],
-          "backUp": [[], []],
-          "backEnd": [["exit", "A", "B"], []]
-        }
-      },
-      "apiID": "900120009"
-    },
-
-
-
-    {
-      "abbrev": "FT", "name": "Frankfurter Tor", "additionalName": "", "directionPresence": "both",
-      "exitSide":
-      {
-        "direction1": {"via": "left", "terminus": "left"},
-        "direction2": {"via": "left", "terminus": "left"}
-      },
-      "connectingServices":
-      {"lineSimple": [[], []], "lineExtended": [[], [], []]},
-      "stationExits":
-      {
-        "direction1":
-        {
-          "frontEnd": [[], []],
-          "frontUp": [[], []],
-          "frontMiddle": [["exit", "A-D"], ["bus"]],
-          "middleUp": [["exit", "E", "lift2"], ["tram"]],
-          "backMiddle": [["exit", "F-H"], ["bus"]],
-          "backUp": [[], []],
-          "backEnd": [[], []]
-        },
-        "direction2":
-        {
-          "frontEnd": [[], []],
-          "frontUp": [[], []],
-          "frontMiddle": [["exit", "F-H"], ["bus"]],
-          "middleUp": [["exit", "E", "lift2"], ["tram"]],
-          "backMiddle": [["exit", "A-D"], ["bus"]],
-          "backUp": [[], []],
-          "backEnd": [[], []]
-        }
-      },
-      "apiID": "900120008"
-    },
-
-
-
-    {
-      "abbrev": "WR", "name": "Weberwiese", "additionalName": "", "directionPresence": "both",
-      "exitSide":
-      {
-        "direction1": {"via": "left", "terminus": "left"},
-        "direction2": {"via": "left", "terminus": "left"}
-      },
-      "connectingServices":
-      {"lineSimple": [[], []], "lineExtended": [[], [], []]},
-      "stationExits":
-      {
-        "direction1":
-        {
-          "frontEnd": [["exit", "A", "B"], ["bus"]],
-          "frontUp": [[], []],
-          "frontMiddle": [[], []],
-          "middleUp": [[], []],
-          "backMiddle": [["exit", "lift1"], []],
-          "backUp": [[], []],
-          "backEnd": [["exit", "C", "D"], []]
-        },
-        "direction2":
-        {
-          "frontEnd": [["exit", "C", "D"], []],
-          "frontUp": [[], []],
-          "frontMiddle": [["exit", "lift1"], []],
-          "middleUp": [[], []],
-          "backMiddle": [[], []],
-          "backUp": [[], []],
-          "backEnd": [["exit", "A", "B"], ["bus"]]
-        }
-      },
-      "apiID": "900120025"
-    },
-
-
-
-    {
-      "abbrev": "Sr", "name": "Strausberger Platz", "additionalName": "", "directionPresence": "both",
-      "exitSide":
-      {
-        "direction1": {"via": "left", "terminus": "left"},
-        "direction2": {"via": "left", "terminus": "left"}
-      },
-      "connectingServices":
-      {"lineSimple": [[], []], "lineExtended": [[], [], []]},
-      "stationExits":
-      {
-        "direction1":
         {
           "frontEnd": [["exit", "A", "B"], []],
           "frontUp": [[], []],
           "frontMiddle": [[], []],
           "middleUp": [[], []],
           "backMiddle": [[], []],
-          "backUp": [["exit", "lift1"], []],
-          "backEnd": [["exit", "C-E"], ["bus"]]
-        },
-        "direction2":
-        {
-          "frontEnd": [["exit", "C-E"], ["bus"]],
-          "frontUp": [["exit", "lift1"], []],
-          "frontMiddle": [[], []],
-          "middleUp": [[], []],
-          "backMiddle": [[], []],
           "backUp": [[], []],
-          "backEnd": [["exit", "A", "B"], []]
+          "backEnd": [["exit", "C", "D", "lift1"], ["tram", "bus"]]
         }
       },
-      "apiID": "900120006"
+      "apiID": "900110019"
     },
 
 
 
     {
-      "abbrev": "Si", "name": "Schillingstraße", "additionalName": "", "directionPresence": "both",
+      "abbrev": "Al", "name": "Alexanderplatz", "additionalName": "", "directionPresence": "both", "changeover": true,
       "exitSide":
       {
         "direction1": {"via": "left", "terminus": "left"},
         "direction2": {"via": "left", "terminus": "left"}
       },
       "connectingServices":
-      {"lineSimple": [[], []], "lineExtended": [[], [], []]},
-      "stationExits":
-      {
-        "direction1":
-        {
-          "frontEnd": [["exit", "A"], []],
-          "frontUp": [[], []],
-          "frontMiddle": [[], []],
-          "middleUp": [[], []],
-          "backMiddle": [["exit", "lift1"], []],
-          "backUp": [[], []],
-          "backEnd": [["exit", "B", "C"], ["bus"]]
-        },
-        "direction2":
-        {
-          "frontEnd": [["exit", "B", "C"], ["bus"]],
-          "frontUp": [[], []],
-          "frontMiddle": [["exit", "lift1"], []],
-          "middleUp": [[], []],
-          "backMiddle": [[], []],
-          "backUp": [[], []],
-          "backEnd": [["exit", "A"], []]
-        }
-      },
-      "apiID": "900100017"
-    },
-
-
-
-    {
-      "abbrev": "Al", "name": "Alexanderplatz", "additionalName": "", "directionPresence": "both",
-      "exitSide":
-      {
-        "direction1": {"via": "right", "terminus": "right"},
-        "direction2": {"via": "right", "terminus": "left"}
-      },
-      "connectingServices":
-      {"lineSimple": [["bahn", "sbahn"], ["U2", "U8"]], "lineExtended": [["bahn", "sbahn"], ["U2", "U8"], []]},
+      {"lineSimple": [["bahn", "sbahn", "U2"], ["U5", "U8", "U10"]], "lineExtended": [["bahn", "sbahn"], ["U2", "U5"], ["U8", "U10"]]},
       "stationExits":
       {
         "direction1":
         {
           "frontEnd": [["exit", "H-L", "lift1", "infocenter"], ["bahn", "sbahn", "U8", "tram"]],
-          "frontUp": [["exit"], []],
+          "frontUp": [["exit"], ["U5"]],
           "frontMiddle": [["exit", "M", "N", "WC"], []],
-          "middleUp": [["exit"], ["U2"]],
+          "middleUp": [["exit"], ["U2", "U5"]],
           "backMiddle": [[], []],
-          "backUp": [["exit", "O", "P", "lift4"], ["U2", "bus"]],
+          "backUp": [["exit", "O", "P", "lift4"], ["U2", "U5", "bus"]],
           "backEnd": [["exit", "Q"], ["tram"]]
         },
         "direction2":
         {
           "frontEnd": [["exit", "Q"], ["tram"]],
-          "frontUp": [["exit", "O", "P", "lift3"], ["U2", "bus"]],
+          "frontUp": [["exit", "O", "P", "lift3"], ["U2", "U5", "bus"]],
           "frontMiddle": [[], []],
-          "middleUp": [["exit"], ["U2"]],
+          "middleUp": [["exit"], ["U2", "U5"]],
           "backMiddle": [["exit", "M", "N", "WC"], []],
-          "backUp": [["exit"], []],
+          "backUp": [["exit"], ["U5"]],
           "backEnd": [["exit", "H-L", "lift2", "infocenter"], ["bahn", "sbahn", "U8", "tram"]]
         }
       },

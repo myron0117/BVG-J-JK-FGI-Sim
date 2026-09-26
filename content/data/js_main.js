@@ -113,6 +113,7 @@
   let directionPage = 1;
   let exitsTimedOut = false;
   let currentVia = null;
+  let autoCloseConsumed = false;
 
   let liveConnectionsTimer = null;      // 10‑second timer for showing the overview
   let liveConnectionsInterval = null;   // 10‑second page cycling
@@ -144,13 +145,28 @@
     return config && config.appearance === 'dark' ? '#585858' : '#8c8c8c';
   }
 
-  function clearAllTimers() {
+  function clearAllTimers(skipDoorTimers = false) {
     if (gongTimer) { clearTimeout(gongTimer); gongTimer = null; }
     if (pageLoopTimer) { clearInterval(pageLoopTimer); pageLoopTimer = null; }
-    if (doorBlinkInterval) { clearInterval(doorBlinkInterval); doorBlinkInterval = null; }
-    if (blinkStopTimer) { clearTimeout(blinkStopTimer); blinkStopTimer = null; }
-    if (forwardPendingTimer) { clearTimeout(forwardPendingTimer); forwardPendingTimer = null; }
-    if (doorAutoCloseTimer) { clearTimeout(doorAutoCloseTimer); doorAutoCloseTimer = null; }
+    if (!skipDoorTimers) {
+      if (doorBlinkInterval) { clearInterval(doorBlinkInterval); doorBlinkInterval = null; }
+      if (blinkStopTimer) { clearTimeout(blinkStopTimer); blinkStopTimer = null; }
+      if (forwardPendingTimer) { clearTimeout(forwardPendingTimer); forwardPendingTimer = null; }
+      if (doorAutoCloseTimer) { clearTimeout(doorAutoCloseTimer); doorAutoCloseTimer = null; }
+    }
+  }
+
+  function updateDoorButtonAvailability() {
+    // At origin (or no route at all) the train is "parked", so release is valid.
+    const atOriginOrIdle = !routeActive || currentRouteIndex === 0;
+
+    const releaseAvailable =
+      phase === 'arrival' ||
+      phase === 'closing' ||
+      (phase === 'normal' && atOriginOrIdle);
+
+    if (releaseAvailable) enableBtn(btnDoorRelease); else disableBtn(btnDoorRelease);
+    if (phase === 'doorReleased') enableBtn(btnDoorLock); else disableBtn(btnDoorLock);
   }
 
   async function fetchDepartures(stationId) {
@@ -583,6 +599,88 @@
     return ctx.measureText(text).width;
   }
 
+  // Shift a direction-display page so its *visual* content is centred on the page.
+  // Measures the actual painted bounds of the name text and each icon image,
+  // which correctly accounts for icons that overflow their flex wrappers.
+  function applyDirectionCentering(pageEl) {
+    if (!pageEl) return;
+
+    // Temporarily force-show pageEl and any hidden ancestors so we can measure.
+    // (A hidden element returns zero rects, which would silently make the
+    // correction do nothing.)
+    const restore = [];
+    let el = pageEl;
+    while (el && el !== document.body) {
+      const cs = getComputedStyle(el);
+      if (cs.display === 'none' || cs.visibility === 'hidden') {
+        restore.push({ el, display: el.style.display, visibility: el.style.visibility });
+        el.style.setProperty('display', 'flex', 'important');
+        el.style.setProperty('visibility', 'hidden', 'important');
+      }
+      el = el.parentElement;
+    }
+
+    // Reset any previous transform so we measure the untransformed layout.
+    pageEl.style.transform = '';
+
+    const nameEl = pageEl.querySelector('.direction-display-next-station-name');
+    const connEl = pageEl.querySelector('.direction-display-next-station-connections');
+
+    let visualLeft = null;
+    let visualRight = null;
+
+    if (nameEl) {
+      const r = nameEl.getBoundingClientRect();
+      if (r.width > 0 || r.height > 0) {
+        visualLeft = r.left;
+        visualRight = r.right;
+      }
+    }
+    if (connEl) {
+      // Use the <img> rects, not the wrapper rects. An <img> that overflows
+      // its flex wrapper reports its real painted bounds via this API.
+      connEl.querySelectorAll('img').forEach(img => {
+        const r = img.getBoundingClientRect();
+        if (visualLeft === null || r.left < visualLeft) visualLeft = r.left;
+        if (visualRight === null || r.right > visualRight) visualRight = r.right;
+      });
+    }
+
+    if (visualLeft !== null && visualRight !== null) {
+      const pr = pageEl.getBoundingClientRect();
+      const layoutCenter = pr.left + pr.width / 2;
+      const visualCenter = (visualLeft + visualRight) / 2;
+      const visualShift = layoutCenter - visualCenter;
+
+      // getBoundingClientRect() reports *visual* pixels (post zoom/transform),
+      // but translateX() on this element is interpreted in *local* pixels and
+      // then scaled by any ancestor zoom/transform. Dividing by the effective
+      // scale converts the visual shift back into the local pixel space so it
+      // lands exactly where it should after scaling.
+      const layoutWidth = pageEl.offsetWidth;
+      const scale = (layoutWidth > 0 && pr.width > 0) ? (pr.width / layoutWidth) : 1;
+      const localShift = visualShift / scale;
+
+      if (Math.abs(localShift) > 0.25) {
+        pageEl.style.transform = `translateX(${localShift}px)`;
+      }
+    }
+
+    // Restore ancestors in reverse.
+    for (let i = restore.length - 1; i >= 0; i--) {
+      const a = restore[i];
+      a.el.style.setProperty('display', a.display || '', 'important');
+      a.el.style.setProperty('visibility', a.visibility || '', 'important');
+    }
+  }
+
+  function directionWrapperWidth(service) {
+    if (service.startsWith('U')) return 260;
+    if (service.startsWith('S')) return 280;
+    if (service === 'jelbi') return 154;
+    return 155;
+  }
+
   function fitNameToPage(nameEl, container, maxFontSize) {
     const text = nameEl.textContent;
     let fontSize = maxFontSize;
@@ -821,7 +919,7 @@
     if (routeActive) {
       computeRouteSegmentColors();
       updateAllDisplays();
-      if (!isRemote && (phase === 'arrival' || phase === 'doorReleased' || phase === 'closing')) {
+      if (!isRemote && currentRouteIndex > 0 && (phase === 'arrival' || phase === 'doorReleased' || phase === 'closing')) {
         const station = routeStations[currentRouteIndex];
         const exitSide = station.exitSide[`direction${direction}`];
         const via = currentVia ||
@@ -1053,6 +1151,19 @@
     appearanceLightBtn.onclick = () => { config.appearance = 'light'; applyConfigUI(); };
     appearanceDarkBtn.onclick = () => { config.appearance = 'dark'; applyConfigUI(); };
 
+    const btnStartEndSwap = $('#routeStartEndSwapButton');
+    if (btnStartEndSwap) {
+      btnStartEndSwap.addEventListener('click', () => {
+        const temp = inputStart.value;
+        inputStart.value = inputEnd.value;
+        inputEnd.value = temp;
+        // Re-validate both fields
+        validateStation(inputStart, 'start');
+        validateStation(inputEnd, 'end');
+        updateConfirmButtonState();
+      });
+    }
+
     fallbackBtns.forEach(btn => {
       btn.addEventListener('mouseenter', () => {
         btn.style.border = '4px solid #ffffff';
@@ -1166,12 +1277,7 @@
     }
     if (type === 'skip') {
       const raw = input.value.trim();
-      const isInclude = raw.startsWith('!');
-      let stationPart = raw;
-      if (isInclude) {
-        stationPart = raw.slice(1).trim();
-      }
-      const tokens = stationPart.split(/\s+/).filter(t => t);
+      const tokens = raw.split(/\s+/).filter(t => t);
 
       // Validate all tokens are real station abbreviations
       let allValid = true;
@@ -1188,14 +1294,8 @@
         return;
       }
 
-      // Reconstruct the input value with corrected abbreviations, preserving the prefix
-      if (isInclude) {
-        inputSkip.value = '! ' + correctedTokens.join(' ');
-      } else {
-        inputSkip.value = correctedTokens.join(' ');
-      }
-
-      // Valid – mark skip input valid
+      // Reconstruct the input value with corrected abbreviations
+      inputSkip.value = correctedTokens.join(' ');
       inputSkip.style.setProperty('border', '4px solid #d2d2d2', 'important');
       inputSkip.dataset.invalid = '';
       updateConfirmButtonState();
@@ -1399,17 +1499,8 @@
     const segment = fullOrdered.slice(startPos, endPos + 1);
 
     const skipRaw = inputSkip.value.trim();
-    const isInclude = skipRaw.startsWith('!');
-
-    let stationFilter;
-    if (isInclude) {
-      const stationPart = skipRaw.slice(1).trim();
-      const includeSet = new Set(stationPart ? stationPart.split(/\s+/) : []);
-      routeStations = segment.filter(s => includeSet.has(s.abbrev));
-    } else {
-      const skippedSet = new Set(skipRaw ? skipRaw.split(/\s+/) : []);
-      routeStations = segment.filter(s => !skippedSet.has(s.abbrev));
-    }
+    const skippedSet = new Set(skipRaw ? skipRaw.split(/\s+/) : []);
+    routeStations = segment.filter(s => !skippedSet.has(s.abbrev));
 
     if (!routeStations.find(s => s.abbrev === start) ||
       !routeStations.find(s => s.abbrev === end)) return;
@@ -1417,26 +1508,42 @@
     currentRouteIndex = routeStations.findIndex(s => s.abbrev === start);
     if (currentRouteIndex === -1) currentRouteIndex = 0;
 
-    phase = 'normal';
+    // Preserve open doors AND the closing state; otherwise reset to normal.
+    if (phase !== 'doorReleased' && phase !== 'closing') {
+      phase = 'normal';
+    }
     routeActive = true;
     exitsTimedOut = false;
     clearAllTimers();
+
+    // Tear down anything left over from the previous route's station.
+    hideLiveConnections();
+    simpleContainer.style.visibility = 'visible';
+    $$('.information-display-line-simple-station-name').forEach(el => el.style.visibility = 'visible');
+    $$('.information-display-line-simple-station-additional-name').forEach(el => el.style.visibility = 'visible');
+    $$('.information-display-line-simple-station-connections-rows').forEach(el => el.style.visibility = '');
+    exitsContainer.style.visibility = 'hidden';
+
     computeRouteSegmentColors();
+    updateDoorButtonAvailability();
     updateUIForActiveRoute();
     updateAllDisplays();
   }
 
   function resetRoute() {
+    const doorPhaseActive = (phase === 'doorReleased' || phase === 'closing');
     routeActive = false;
     lineData = null;
     routeStations = [];
     currentRouteIndex = 0;
-    phase = 'normal';
+    if (!doorPhaseActive) phase = 'normal';
     exitsTimedOut = false;
     currentVia = null;
+    nextStationPage1.style.transform = '';
+    nextStationPage2.style.transform = '';
     window._segmentColors = null; window._arrowColor = null;
     hideLiveConnections();
-    clearAllTimers();
+    clearAllTimers(doorPhaseActive);
 
     // Information display – always present
     infoFallbackLayer.style.visibility = 'visible';
@@ -1461,7 +1568,7 @@
     }
     if (exitLeftArrow) exitLeftArrow.style.visibility = 'hidden';
     if (exitRightArrow) exitRightArrow.style.visibility = 'hidden';
-    if (doorLightbar) doorLightbar.style.visibility = 'hidden';
+    if (doorLightbar && !doorPhaseActive) doorLightbar.style.visibility = 'hidden';
 
     // Line icon
     if (infoLineIcon) infoLineIcon.src = '';
@@ -1480,16 +1587,19 @@
   }
 
   function resetRouteKeepInputs() {
+    const doorPhaseActive = (phase === 'doorReleased' || phase === 'closing');
     routeActive = false;
     lineData = null;
     routeStations = [];
     currentRouteIndex = 0;
-    phase = 'normal';
+    if (!doorPhaseActive) phase = 'normal';
     exitsTimedOut = false;
     currentVia = null;
+    nextStationPage1.style.transform = '';
+    nextStationPage2.style.transform = '';
     window._segmentColors = null; window._arrowColor = null;
     hideLiveConnections();
-    clearAllTimers();
+    clearAllTimers(doorPhaseActive);
 
     // Information display – always present
     infoFallbackLayer.style.visibility = 'visible';
@@ -1514,7 +1624,7 @@
     }
     if (exitLeftArrow) exitLeftArrow.style.visibility = 'hidden';
     if (exitRightArrow) exitRightArrow.style.visibility = 'hidden';
-    if (doorLightbar) doorLightbar.style.visibility = 'hidden';
+    if (doorLightbar && !doorPhaseActive) doorLightbar.style.visibility = 'hidden';
 
     // Line icon
     if (infoLineIcon) infoLineIcon.src = '';
@@ -1547,7 +1657,8 @@
     disableBtn(btnConfirm);
     disableBtn(btnReset);
     disableBtn(btnForward); disableBtn(btnBackward);
-    disableBtn(btnArrival); disableBtn(btnDoorRelease); disableBtn(btnDoorLock);
+    disableBtn(btnArrival);
+    updateDoorButtonAvailability();
   }
 
   function updateUIForActiveRoute() {
@@ -1667,14 +1778,13 @@
 
     // Buttons – only on main page
     if (!isRemote) {
-      disableBtn(inputLine); disableBtn(inputStart); disableBtn(inputEnd); disableBtn(inputSkip);
-      disableBtn(btnConfirm);
+      enableBtn(inputLine); enableBtn(inputStart); enableBtn(inputEnd); enableBtn(inputSkip);
+      enableBtn(btnConfirm);   // confirmation validity handled by updateConfirmButtonState
       enableBtn(btnReset);
       enableBtn(btnForward);
       enableBtn(btnBackward);
       disableBtn(btnArrival);
-      disableBtn(btnDoorRelease);
-      disableBtn(btnDoorLock);
+      updateDoorButtonAvailability();
       updateNavButtons();
       updatePositionButtonsLayout();
     }
@@ -1683,8 +1793,9 @@
   }
 
   function updateNavButtons() {
-    if (currentRouteIndex === 0) disableBtn(btnBackward); else enableBtn(btnBackward);
-    if (currentRouteIndex === routeStations.length - 1) disableBtn(btnForward); else enableBtn(btnForward);
+    const movementOk = routeActive && (phase === 'normal' || phase === 'closing');
+    if (movementOk && currentRouteIndex < routeStations.length - 1) enableBtn(btnForward); else disableBtn(btnForward);
+    if (movementOk && currentRouteIndex > 0) enableBtn(btnBackward); else disableBtn(btnBackward);
   }
 
   // ---------- movement & phases ----------
@@ -1699,6 +1810,7 @@
       hideLiveConnections();
       clearAllTimers();               // also cancels auto‑close timer
       phase = 'normal';
+      updateDoorButtonAvailability();
       // Immediately hide exits and show simple line overview
       simpleContainer.style.visibility = 'visible';
       $$('.information-display-line-simple-station-name').forEach(el => el.style.visibility = 'visible');
@@ -1726,6 +1838,7 @@
     hideLiveConnections();
     clearAllTimers();
     phase = 'normal';
+    updateDoorButtonAvailability();
     // … rest unchanged …
 
     nextStationDisplay.style.setProperty('display', 'none', 'important');
@@ -1751,8 +1864,6 @@
     enableBtn(btnForward);
     enableBtn(btnBackward);
     disableBtn(btnArrival);
-    disableBtn(btnDoorRelease);
-    disableBtn(btnDoorLock);
     updateNavButtons();
   }
 
@@ -1775,6 +1886,7 @@
     hideLiveConnections();
     clearAllTimers();
     phase = 'normal';
+    updateDoorButtonAvailability();
 
     nextStationDisplay.style.setProperty('display', 'none', 'important');
     nextStationDisplay.style.setProperty('visibility', 'hidden', 'important');
@@ -1790,8 +1902,6 @@
     enableBtn(btnForward);
     enableBtn(btnBackward);
     disableBtn(btnArrival);
-    disableBtn(btnDoorRelease);
-    disableBtn(btnDoorLock);
     updateNavButtons();
   }
 
@@ -1806,6 +1916,7 @@
       hideLiveConnections();
       clearAllTimers();
       phase = 'normal';
+      updateDoorButtonAvailability();
       // Immediately hide exits and show simple line overview
       simpleContainer.style.visibility = 'visible';
       $$('.information-display-line-simple-station-name').forEach(el => el.style.visibility = 'visible');
@@ -1833,6 +1944,7 @@
     hideLiveConnections();
     clearAllTimers();
     phase = 'normal';
+    updateDoorButtonAvailability();
 
     nextStationDisplay.style.display = 'none';
     nextStationDisplay.style.visibility = 'hidden';
@@ -1848,8 +1960,6 @@
     enableBtn(btnForward);
     enableBtn(btnBackward);
     disableBtn(btnArrival);
-    disableBtn(btnDoorRelease);
-    disableBtn(btnDoorLock);
     updateNavButtons();
   }
 
@@ -1872,6 +1982,7 @@
     if (forwardPendingTimer) { clearTimeout(forwardPendingTimer); forwardPendingTimer = null; }
     if (doorAutoCloseTimer) { clearTimeout(doorAutoCloseTimer); doorAutoCloseTimer = null; }
     phase = 'arrival';
+    autoCloseConsumed = false;
     exitsTimedOut = false;
 
     const cur = routeStations[currentRouteIndex];
@@ -1921,35 +2032,51 @@
     }
 
     if (!isRemote) {
-      enableBtn(btnDoorRelease);
+      updateDoorButtonAvailability();
       disableBtn(btnArrival);
       disableBtn(btnForward);
       disableBtn(btnBackward);
-      disableBtn(btnDoorLock);
     }
   }
 
   function doorRelease() {
-    if (phase !== 'arrival') return;
+    const atOriginOrIdle = !routeActive || currentRouteIndex === 0;
+    const allowed =
+      phase === 'arrival' ||
+      phase === 'closing' ||
+      (phase === 'normal' && atOriginOrIdle);
+    if (!allowed) return;
+
+    // Stop any active closing blink cycle
+    if (doorBlinkInterval) { clearInterval(doorBlinkInterval); doorBlinkInterval = null; }
+    if (blinkStopTimer) { clearTimeout(blinkStopTimer); blinkStopTimer = null; }
+    if (forwardPendingTimer) { clearTimeout(forwardPendingTimer); forwardPendingTimer = null; }
+
     phase = 'doorReleased';
+
     if (doorLightbar) {
       doorLightbar.style.backgroundColor = '#58ff58';
       doorLightbar.style.visibility = 'visible';
       doorLightbar.style.opacity = '1';
     }
-    // Always start the auto‑close timer (works on remote too)
-    if (doorAutoCloseTimer) clearTimeout(doorAutoCloseTimer);
-    doorAutoCloseTimer = setTimeout(autoCloseExits, 10000);
+
+    if (!autoCloseConsumed) {
+      if (doorAutoCloseTimer) clearTimeout(doorAutoCloseTimer);
+      doorAutoCloseTimer = setTimeout(autoCloseExits, 10000);
+      autoCloseConsumed = true;
+    }
 
     if (!isRemote) {
-      enableBtn(btnDoorLock);
-      disableBtn(btnDoorRelease);
+      updateDoorButtonAvailability();
+      updateNavButtons();   // disables forward/backward while doors open
     }
   }
 
   function autoCloseExits() {
     if (doorAutoCloseTimer) { clearTimeout(doorAutoCloseTimer); doorAutoCloseTimer = null; }
-    if (phase !== 'doorReleased' && phase !== 'closing') return;
+    // if (phase !== 'doorReleased' && phase !== 'closing') return;
+
+    if (!routeActive) return;
 
     exitsTimedOut = true;     // prevent re‑appearance
 
@@ -1998,11 +2125,7 @@
         if (doorLightbar) doorLightbar.style.visibility = 'hidden';
       }, 30000);
 
-      enableBtn(btnForward);
-      enableBtn(btnBackward);
-      disableBtn(btnArrival);
-      disableBtn(btnDoorRelease);
-      disableBtn(btnDoorLock);
+      updateDoorButtonAvailability();
       updateNavButtons();
     }
   }
@@ -2032,13 +2155,10 @@
     exitLeftArrow.style.visibility = 'hidden';
     exitRightArrow.style.visibility = 'hidden';
 
-    enableBtn(btnForward);
-    enableBtn(btnBackward);
     disableBtn(btnArrival);
-    disableBtn(btnDoorRelease);
-    disableBtn(btnDoorLock);
-    updateAllDisplays();
+    updateDoorButtonAvailability();
     updateNavButtons();
+    updateAllDisplays();
   }
 
   // ---------- direction display ----------
@@ -2053,18 +2173,21 @@
     const iconsHTML = allServices.map(s => serviceIconHTML(s, 'direction')).join('');
 
     const nameWidth = measureTextWidth(station.name, 160) * 0.95;
-    const iconTotalWidth = allServices.reduce((sum, s) => sum + (s.startsWith('U') ? 260 : 155), 0) + (allServices.length > 0 ? 154 : 0);
+    const iconTotalWidth = allServices.reduce((sum, s) => sum + directionWrapperWidth(s), 0) + (allServices.length > 0 ? 154 : 0);
     const totalWidth = nameWidth + iconTotalWidth + 40;
 
     if (pageLoopTimer) { clearInterval(pageLoopTimer); pageLoopTimer = null; }
 
-    // Helper to measure the actual rendered width of an icon block
+    // Reset any previous centering shifts before rebuilding.
+    nextStationPage1.style.transform = '';
+    nextStationPage2.style.transform = '';
+
     const measureBlockWidth = (services) => {
       const html = `<div class="direction-display-next-station-connections">${figureHTML}${services.map(s => serviceIconHTML(s, 'direction')).join('')}</div>`;
       const tmp = document.createElement('div');
       tmp.style.position = 'absolute';
       tmp.style.visibility = 'hidden';
-      tmp.style.display = 'flex';        // match the real container
+      tmp.style.display = 'flex';
       tmp.innerHTML = html;
       document.body.appendChild(tmp);
       const w = tmp.scrollWidth;
@@ -2073,13 +2196,10 @@
     };
 
     if (totalWidth > 1600 && allServices.length > 0) {
-      // ----- Multi‑page layout (2 or 3 virtual pages) -----
+      // ----- Multi-page layout (2 or 3 virtual pages) -----
 
-      // Build station‑name page (always page 1)
-      const page1HTML = `<div class="direction-display-next-station-name">${station.name}</div>`;
-      nextStationPage1.innerHTML = page1HTML;
-
-      // Fit the name if needed
+      // Build station-name page (always page 1).
+      nextStationPage1.innerHTML = `<div class="direction-display-next-station-name">${station.name}</div>`;
       const page1Name = nextStationPage1.querySelector('.direction-display-next-station-name');
       if (page1Name) {
         nextStationPage1.style.setProperty('display', 'flex', 'important');
@@ -2087,9 +2207,8 @@
         fitNameToPage(page1Name, nextStationPage1, 160);
       }
 
-      // Decide whether 2 or 3 pages are needed
       const fullWidth = measureBlockWidth(allServices);
-      const MAX_WIDTH = 1600;   // container limit
+      const MAX_WIDTH = 1600;
 
       if (fullWidth <= MAX_WIDTH) {
         // ---- 2 pages: name + all icons ----
@@ -2105,35 +2224,27 @@
           nextStationPage1.style.setProperty('visibility', showPage1 ? 'visible' : 'hidden', 'important');
           nextStationPage2.style.setProperty('display', showPage1 ? 'none' : 'flex', 'important');
           nextStationPage2.style.setProperty('visibility', showPage1 ? 'hidden' : 'visible', 'important');
+          if (!showPage1) applyDirectionCentering(nextStationPage2);
         }, 10000);
 
       } else {
-        // ---- 3 pages: name, icons part 1, icons part 2 ----
+        // ---- 3 pages: name, icons part 1, icons part 2 ----
         const group1 = [];
         const group2 = [];
         let accumulated = [];
         let splitDone = false;
 
         for (const s of allServices) {
-          if (splitDone) {
-            group2.push(s);
-            continue;
-          }
+          if (splitDone) { group2.push(s); continue; }
           accumulated.push(s);
-          const w = measureBlockWidth(accumulated);
-          if (w > MAX_WIDTH) {
-            // Last icon caused overflow → move it to group2
+          if (measureBlockWidth(accumulated) > MAX_WIDTH) {
             accumulated.pop();
             group1.push(...accumulated);
             group2.push(s);
             splitDone = true;
           }
         }
-        // If split never happened (all icons fit, which shouldn't happen here),
-        // put everything in group1 as a safety fallback.
-        if (!splitDone) {
-          group1.push(...allServices);
-        }
+        if (!splitDone) group1.push(...allServices);
 
         const buildIconPage = (services) =>
           `<div class="direction-display-next-station-connections">${figureHTML}${services.map(s => serviceIconHTML(s, 'direction')).join('')}</div>`;
@@ -2141,11 +2252,11 @@
         const page2HTML = buildIconPage(group1);
         const page3HTML = buildIconPage(group2);
 
-        nextStationPage2.innerHTML = page2HTML;   // preload first icon group
+        nextStationPage2.innerHTML = page2HTML;
         nextStationPage2.style.setProperty('display', 'none', 'important');
         nextStationPage2.style.setProperty('visibility', 'hidden', 'important');
 
-        let currentPage = 1;   // 1 = name, 2 = icons group 1, 3 = icons group 2
+        let currentPage = 1;
         pageLoopTimer = setInterval(() => {
           currentPage = currentPage === 1 ? 2 : (currentPage === 2 ? 3 : 1);
           if (currentPage === 1) {
@@ -2159,18 +2270,20 @@
             nextStationPage1.style.setProperty('visibility', 'hidden', 'important');
             nextStationPage2.style.setProperty('display', 'flex', 'important');
             nextStationPage2.style.setProperty('visibility', 'visible', 'important');
+            applyDirectionCentering(nextStationPage2);
           } else {
             nextStationPage2.innerHTML = page3HTML;
             nextStationPage1.style.setProperty('display', 'none', 'important');
             nextStationPage1.style.setProperty('visibility', 'hidden', 'important');
             nextStationPage2.style.setProperty('display', 'flex', 'important');
             nextStationPage2.style.setProperty('visibility', 'visible', 'important');
+            applyDirectionCentering(nextStationPage2);
           }
         }, 10000);
       }
 
     } else {
-      // ----- Single‑page layout (unchanged) -----
+      // ----- Single-page layout -----
       if (allServices.length > 0) {
         nextStationPage1.innerHTML = `<div class="direction-display-next-station-name">${station.name}</div><div class="direction-display-next-station-connections">${figureHTML}${iconsHTML}</div>`;
         nextStationPage1.style.gap = '';
@@ -2193,7 +2306,7 @@
       }
     }
 
-    // Final display toggles (unchanged)
+    // Final display toggles.
     nextStationDisplay.style.setProperty('display', 'flex', 'important');
     nextStationDisplay.style.setProperty('visibility', 'visible', 'important');
     dirDestination.style.setProperty('display', 'none', 'important');
@@ -2201,6 +2314,11 @@
     exitSideContainer.style.setProperty('display', 'none', 'important');
     exitLeftArrow.style.visibility = 'hidden';
     exitRightArrow.style.visibility = 'hidden';
+
+    // Now that everything is in its final shown/hidden state, run the centering
+    // pass on each page (the helper temporarily reveals hidden pages to measure).
+    applyDirectionCentering(nextStationPage1);
+    applyDirectionCentering(nextStationPage2);
   }
 
   function fitTextToContainer(el, maxFontSize) {
@@ -3113,16 +3231,8 @@
     const segment = fullOrdered.slice(startPos, endPos + 1);
 
     const skipRaw = skip ? String(skip).trim() : '';
-    const isInclude = skipRaw.startsWith('!');
-
-    if (isInclude) {
-      const stationPart = skipRaw.slice(1).trim();
-      const includeSet = new Set(stationPart ? stationPart.split(/\s+/) : []);
-      routeStations = segment.filter(s => includeSet.has(s.abbrev));
-    } else {
-      const skippedSet = new Set(skipRaw ? skipRaw.split(/\s+/) : []);
-      routeStations = segment.filter(s => !skippedSet.has(s.abbrev));
-    }
+    const skippedSet = new Set(skipRaw ? skipRaw.split(/\s+/) : []);
+    routeStations = segment.filter(s => !skippedSet.has(s.abbrev));
 
     if (!routeStations.find(s => s.abbrev === start) ||
       !routeStations.find(s => s.abbrev === end)) return;
@@ -3291,6 +3401,9 @@
 
   // ---------- init ----------
   async function init() {
+
+    if (!isRemote) updateDoorButtonAvailability();
+
     await loadConfig();
 
     try {

@@ -76,19 +76,27 @@ Die Spracheinstellung in der oberen rechten Ecke ist Bestandteil der Konfigurati
 
 In folgender Tabelle sind alle verwendbaren Linien sowie eine kurze Beschreibung angegeben.
 
-| Gezeigte Linienbez. | Einzugebene Linienbez. | Beschreibung |
+| Gezeigte Linienbezeichnung | Einzugebene Linienbezeichnung | Beschreibung |
 | ------------- | ------------- | ------------- |
 | **U1 - U9** | `U1` `U2` `U3` `U4` `U5` `U6` `U7` `U8` `U9` | Standardlinien. |
 | **U1** | `U1+` | Alternative Linienführung nach Ruhleben. |
 | **U2** | `U2+` | Fiktive Verlängerung nach Rathaus Spandau. |
 | **U2** | `U2MH` | Erhalt des Stationsnamen Mohrenstraße. |
+| **U2** | `U2MH+` | Fiktive Verlängerung nach Rathaus Spandau mit Erhalt des Stationsnamen Mohrenstraße. |
 | **U3** | `U3+` | Fiktive Verlängerung zum Mexikoplatz. |
-| **U5** | `U5+` | Fiktive Verlängerung nach Urban Tech Republic, basiert auf fiktive U55 von U-Bahn Sim Berlin's Trainz Simulator 2009 Add-On. |
+| **U5** | `U5+` | Fiktive Verlängerung nach Tegelort, basiert auf fiktive U55 von U-Bahn Sim Berlin's Trainz Simulator 2009 Add-On. |
+| **U5** | `U5GK` | Erhalt des Stationsnamen Neue Grottkauer Straße. |
+| **U5** | `U5GK+` | Fiktive Verlängerung nach Tegelort mit Erhalt des Stationsnamen Neue Grottkauer Straße. |
 | **U6** | `U6+` | Erhalt der geschlossenen Station Französische Straße. |
 | **U7** | `U7+` | Fiktive Verlängerung nach Flughafen BER. |
 | **U8** | `U8+` | Fiktive Verlängerung nach Senftenberger Ring. |
+| **U10** | `U10` | Fiktive Linie basiert auf existierenden Bauplänen. |
+| **U10** | `U10+` | Fiktive Linie basiert auf existierenden Bauplänen mit Zusatzstation Bülowstraße, nicht Teil der Originalplanung. |
 | **U12** | `U12` | Umfahrungslinie für Bauarbeiten bestehend aus U1 und U2. |
+| **U12** | `U12+` | Umfahrungslinie für Bauarbeiten bestehend aus U1 und U2 mit fiktiver Verlängerung nach Rathaus Spandau. |
 | **U15** | `U15` | Alternative Linienbezeichnung für die U1. |
+| **U15** | `U15A` | Fiktive Kombi-Linie bestehend aus U5 und U10 zwischen Hönow und Drakestraße. |
+| **U15** | `U15B` | Fiktive Kombi-Linie bestehend aus U5 (mit Trainz-Verlängerung) und U10 zwischen Weißensee und Tegelort. |
 | **U2** | `U23` | Linienführung für damalige U2-Einsetzer aus Fehrbelliner Platz kommend. |
 | **U23** | `U23+` | Fiktive Kombi-Linie bestehend aus U2 und U3. |
 | **U55** | `U55` | Ehemalige Kanzlerlinie. |
@@ -115,8 +123,6 @@ Die Tastenbelegung für die Fernsteuerung basiert auf die Fahrzeugsteuerung in S
 > - Die Bildschirme wurden mit höchster Präzision und nahezu pixelperfekter Platzierung nach ihrem Vorbild gestaltet.
 >
 > - Die Echtzeitanschlüsse werden durch eine im Projekt mitgelieferte Version von [v6.bvg.transport.rest](https://v6.bvg.transport.rest/) ermöglicht.
->
-> - Danke an Dorian für den Anreiz, dieses Projekt zu beginnen!
 
 
 

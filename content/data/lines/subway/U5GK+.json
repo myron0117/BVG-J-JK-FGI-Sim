@@ -154,7 +154,7 @@
 
 
     {
-      "abbrev": "GK", "name": "Kienberg", "additionalName": "Gärten der Welt", "directionPresence": "both",
+      "abbrev": "GK", "name": "Neue Grottkauer Straße", "additionalName": "", "directionPresence": "both",
       "exitSide":
       {
         "direction1": {"via": "left", "terminus": "left"},
@@ -1193,8 +1193,8 @@
       "abbrev": "TXL", "name": "Urban Tech Republic", "additionalName": "", "directionPresence": "both",
       "exitSide":
       {
-        "direction1": {"via": "left", "terminus": "right"},
-        "direction2": {"via": "right", "terminus": "left"}
+        "direction1": {"via": "", "terminus": "random"},
+        "direction2": {"via": "", "terminus": "random"}
       },
       "connectingServices":
       {"lineSimple": [[], []], "lineExtended": [[], [], []]},
@@ -1222,154 +1222,6 @@
         }
       },
       "apiID": "900087172"
-    },
-
-
-
-    {
-      "abbrev": "Mck", "name": "Mäckeritzwiesen", "additionalName": "", "directionPresence": "both",
-      "exitSide":
-      {
-        "direction1": {"via": "left", "terminus": "left"},
-        "direction2": {"via": "left", "terminus": "left"}
-      },
-      "connectingServices":
-      {"lineSimple": [[], []], "lineExtended": [[], [], []]},
-      "stationExits":
-      {
-        "direction1":
-        {
-          "frontEnd": [["exit"], ["bus"]],
-          "frontUp": [[], []],
-          "frontMiddle": [[], []],
-          "middleUp": [[], []],
-          "backMiddle": [[], []],
-          "backUp": [[], []],
-          "backEnd": [["exit"], []]
-        },
-        "direction2":
-        {
-          "frontEnd": [["exit"], []],
-          "frontUp": [[], []],
-          "frontMiddle": [[], []],
-          "middleUp": [[], []],
-          "backMiddle": [[], []],
-          "backUp": [[], []],
-          "backEnd": [["exit"], ["bus"]]
-        }
-      },
-      "apiID": "900089601"
-    },
-
-
-
-    {
-      "abbrev": "Mai", "name": "Maienwerderweg", "additionalName": "", "directionPresence": "both",
-      "exitSide":
-      {
-        "direction1": {"via": "left", "terminus": "left"},
-        "direction2": {"via": "left", "terminus": "left"}
-      },
-      "connectingServices":
-      {"lineSimple": [[], []], "lineExtended": [[], [], []]},
-      "stationExits":
-      {
-        "direction1":
-        {
-          "frontEnd": [[], []],
-          "frontUp": [[], []],
-          "frontMiddle": [["exit"], ["bus"]],
-          "middleUp": [[], []],
-          "backMiddle": [["exit"], ["bus"]],
-          "backUp": [[], []],
-          "backEnd": [[], []]
-        },
-        "direction2":
-        {
-          "frontEnd": [[], []],
-          "frontUp": [[], []],
-          "frontMiddle": [["exit"], ["bus"]],
-          "middleUp": [[], []],
-          "backMiddle": [["exit"], ["bus"]],
-          "backUp": [[], []],
-          "backEnd": [[], []]
-        }
-      },
-      "apiID": "900089652"
-    },
-
-
-
-    {
-      "abbrev": "ISch", "name": "Insel Scharfenberg", "additionalName": "", "directionPresence": "both",
-      "exitSide":
-      {
-        "direction1": {"via": "right", "terminus": "right"},
-        "direction2": {"via": "right", "terminus": "right"}
-      },
-      "connectingServices":
-      {"lineSimple": [[], []], "lineExtended": [[], [], []]},
-      "stationExits":
-      {
-        "direction1":
-        {
-          "frontEnd": [[], []],
-          "frontUp": [[], []],
-          "frontMiddle": [[], []],
-          "middleUp": [["exit"], []],
-          "backMiddle": [[], []],
-          "backUp": [[], []],
-          "backEnd": [[], []]
-        },
-        "direction2":
-        {
-          "frontEnd": [[], []],
-          "frontUp": [[], []],
-          "frontMiddle": [[], []],
-          "middleUp": [["exit"], []],
-          "backMiddle": [[], []],
-          "backUp": [[], []],
-          "backEnd": [[], []]
-        }
-      },
-      "apiID": "00000000"
-    },
-
-
-
-    {
-      "abbrev": "To", "name": "Tegelort", "additionalName": "", "directionPresence": "both",
-      "exitSide":
-      {
-        "direction1": {"via": "", "terminus": "left"},
-        "direction2": {"via": "", "terminus": "left"}
-      },
-      "connectingServices":
-      {"lineSimple": [[], []], "lineExtended": [[], [], []]},
-      "stationExits":
-      {
-        "direction1":
-        {
-          "frontEnd": [["exit", "lift"], ["bus"]],
-          "frontUp": [[], []],
-          "frontMiddle": [[], []],
-          "middleUp": [[], []],
-          "backMiddle": [[], []],
-          "backUp": [[], []],
-          "backEnd": [["exit"], []]
-        },
-        "direction2":
-        {
-          "frontEnd": [["exit"], []],
-          "frontUp": [[], []],
-          "frontMiddle": [[], []],
-          "middleUp": [[], []],
-          "backMiddle": [[], []],
-          "backUp": [[], []],
-          "backEnd": [["exit", "lift"], ["bus"]]
-        }
-      },
-      "apiID": "900090102"
     }
   ]
 }
