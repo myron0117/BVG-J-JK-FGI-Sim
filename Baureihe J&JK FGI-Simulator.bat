@@ -61,8 +61,11 @@ if errorlevel 1 goto :no_old_instance
 echo Vorherige Instanz gefunden, wird beendet...       Previous instance found, shutting down...
 echo.
 
-REM Rename our own window so the old-launcher kill below cannot match us.
-title J/JK FGI-Sim - Launcher (Duplicate)
+REM Rename our own window first, so the old-launcher kill below cannot match us.
+REM No parentheses in the title (some cmd parsers mishandle them after `title`).
+REM A random suffix guarantees no collision with any other window.
+title J/JK FGI-Sim - Launcher Reboot %RANDOM%%RANDOM%
+timeout /t 1 >nul
 
 REM Old launcher window (matches the title set at the top of this file)
 taskkill /FI "WINDOWTITLE eq Baureihe J/JK FGI-Simulator - Launcher" /T /F >nul 2>&1
