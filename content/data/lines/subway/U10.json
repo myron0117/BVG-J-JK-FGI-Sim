@@ -441,7 +441,7 @@
           "middleUp": [[], []],
           "backMiddle": [["exit", "lift2"], ["bahn", "sbahn"]],
           "backUp": [[], []],
-          "backEnd": [["exit", "D", "E"]]
+          "backEnd": [["exit", "D", "E"], []]
         }
       },
       "apiID": "900100020"
@@ -615,13 +615,13 @@
           "frontMiddle": [[], []],
           "middleUp": [[], []],
           "backMiddle": [[], []],
-          "backUp": [["exit", "A", "B", "D", "lift1"], ["bus"]],
+          "backUp": [["exit", "A", "B", "D", "lift1"], ["U7", "bus"]],
           "backEnd": [[], []]
         },
         "direction2":
         {
           "frontEnd": [[], []],
-          "frontUp": [["exit", "A", "B", "D", "lift1"], ["bus"]],
+          "frontUp": [["exit", "A", "B", "D", "lift1"], ["U7", "bus"]],
           "frontMiddle": [[], []],
           "middleUp": [[], []],
           "backMiddle": [[], []],
