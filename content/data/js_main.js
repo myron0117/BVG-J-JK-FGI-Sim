@@ -97,6 +97,7 @@
   let config = null;
   let localizationData = null;
   let lineData = null;
+  let inputLineData = null;
   let routeStations = [];
   let direction = 1;
   let currentRouteIndex = 0;
@@ -154,6 +155,11 @@
       if (forwardPendingTimer) { clearTimeout(forwardPendingTimer); forwardPendingTimer = null; }
       if (doorAutoCloseTimer) { clearTimeout(doorAutoCloseTimer); doorAutoCloseTimer = null; }
     }
+  }
+
+  function clearRoutingTimers() {
+    if (gongTimer) { clearTimeout(gongTimer); gongTimer = null; }
+    if (pageLoopTimer) { clearInterval(pageLoopTimer); pageLoopTimer = null; }
   }
 
   function updateDoorButtonAvailability() {
@@ -676,9 +682,10 @@
 
   function directionWrapperWidth(service) {
     if (service.startsWith('U')) return 260;
-    if (service.startsWith('S')) return 280;
+    if (service.startsWith('S')) return 308;
     if (service === 'jelbi') return 154;
-    return 155;
+    if (service === 'bahn') return 211;
+    return 173;   // fernverkehr, sbahn, tram, bus, flughafen
   }
 
   function fitNameToPage(nameEl, container, maxFontSize) {
@@ -1243,25 +1250,28 @@
   // ---------- input validation ----------
   async function validateLine() {
     const val = inputLine.value.trim();
-    if (!val) return;
+    if (!val) {
+      inputLineData = null;
+      inputLine.style.setProperty('border', '4px solid #d2d2d2', 'important');
+      inputLine.dataset.invalid = '';
+      updateConfirmButtonState();
+      return;
+    }
 
-    // Normalise to uppercase for file lookup (files are named like U5.json, ABC.json, M10.json)
     const upper = val.toUpperCase();
     inputLine.value = upper;
 
-    // Try to fetch the line JSON – if it succeeds, the line is valid
     try {
-      lineData = await loadLineJSON(upper);
+      inputLineData = await loadLineJSON(upper);
+      inputLineData.lineFile = inputLineData.filePath;
       inputLine.style.setProperty('border', '4px solid #d2d2d2', 'important');
       inputLine.dataset.invalid = '';
-      lineData.lineFile = lineData.filePath;
     } catch (e) {
-      lineData = null;
+      inputLineData = null;
       inputLine.style.setProperty('border', '4px solid #ec1c24', 'important');
       inputLine.dataset.invalid = 'true';
     }
 
-    // Re‑validate stations now that we have the line data (if any)
     validateStation(inputStart, 'start');
     validateStation(inputEnd, 'end');
     updateConfirmButtonState();
@@ -1321,7 +1331,7 @@
     input.dataset.invalid = '';
 
     // Now also correct the OTHER field if it has a value
-    if (otherVal && lineData) {
+    if (otherVal && inputLineData) {
       const otherCorrect = findStationAbbrev(otherVal);
       if (otherCorrect) {
         otherInput.value = otherCorrect;    // correct case in other field
@@ -1332,7 +1342,7 @@
     const newStartVal = inputStart.value.trim();
     const newEndVal = inputEnd.value.trim();
 
-    if (newStartVal && newEndVal && lineData) {
+    if (newStartVal && newEndVal && inputLineData) {
       // Check if start and destination are identical
       if (newStartVal.toLowerCase() === newEndVal.toLowerCase()) {
         inputStart.style.setProperty('border', '4px solid #ec1c24', 'important');
@@ -1343,7 +1353,7 @@
         return;
       }
 
-      const possible = isRoutePossible(lineData.stations, newStartVal, newEndVal);
+      const possible = isRoutePossible(inputLineData.stations, newStartVal, newEndVal);
       if (!possible) {
         inputStart.style.setProperty('border', '4px solid #ec1c24', 'important');
         inputStart.dataset.invalid = 'true';
@@ -1361,8 +1371,8 @@
   }
 
   function findStationAbbrev(abbrev) {
-    if (!lineData) return null;
-    const stations = lineData.stations;
+    if (!inputLineData) return null;
+    const stations = inputLineData.stations;
     const lower = abbrev.toLowerCase();
     const found = stations.find(s => s.abbrev.toLowerCase() === lower);
     return found ? found.abbrev : null;
@@ -1514,7 +1524,7 @@
     }
     routeActive = true;
     exitsTimedOut = false;
-    clearAllTimers();
+    clearRoutingTimers();
 
     // Tear down anything left over from the previous route's station.
     hideLiveConnections();
@@ -1539,8 +1549,8 @@
     if (!doorPhaseActive) phase = 'normal';
     exitsTimedOut = false;
     currentVia = null;
-    nextStationPage1.style.transform = '';
-    nextStationPage2.style.transform = '';
+    if (nextStationPage1) nextStationPage1.style.transform = '';
+    if (nextStationPage2) nextStationPage2.style.transform = '';
     window._segmentColors = null; window._arrowColor = null;
     hideLiveConnections();
     clearAllTimers(doorPhaseActive);
@@ -1595,8 +1605,8 @@
     if (!doorPhaseActive) phase = 'normal';
     exitsTimedOut = false;
     currentVia = null;
-    nextStationPage1.style.transform = '';
-    nextStationPage2.style.transform = '';
+    if (nextStationPage1) nextStationPage1.style.transform = '';
+    if (nextStationPage2) nextStationPage2.style.transform = '';
     window._segmentColors = null; window._arrowColor = null;
     hideLiveConnections();
     clearAllTimers(doorPhaseActive);
@@ -2190,7 +2200,16 @@
       tmp.style.display = 'flex';
       tmp.innerHTML = html;
       document.body.appendChild(tmp);
-      const w = tmp.scrollWidth;
+      // Use the <img> rects. scrollWidth only reports the layout width and
+      // therefore misses the overflow that makes a row wider than it looks.
+      const imgs = tmp.querySelectorAll('img');
+      let left = Infinity, right = -Infinity;
+      imgs.forEach(img => {
+        const r = img.getBoundingClientRect();
+        if (r.left < left) left = r.left;
+        if (r.right > right) right = r.right;
+      });
+      const w = (right > left) ? (right - left) : tmp.scrollWidth;
       document.body.removeChild(tmp);
       return w;
     };

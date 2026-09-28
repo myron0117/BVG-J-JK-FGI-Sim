@@ -40,9 +40,10 @@
 
     function directionWrapperWidth(service) {
         if (service.startsWith('U')) return 260;
-        if (service.startsWith('S')) return 280;
+        if (service.startsWith('S')) return 308;
         if (service === 'jelbi') return 154;
-        return 155;
+        if (service === 'bahn') return 211;
+        return 173;   // fernverkehr, sbahn, tram, bus, flughafen
     }
 
     // Shift a direction-display page so its *visual* content is centred on the page.
@@ -278,7 +279,16 @@
             tmp.style.display = 'flex';
             tmp.innerHTML = html;
             document.body.appendChild(tmp);
-            const w = tmp.scrollWidth;
+            // Use the <img> rects. scrollWidth only reports the layout width and
+            // therefore misses the overflow that makes a row wider than it looks.
+            const imgs = tmp.querySelectorAll('img');
+            let left = Infinity, right = -Infinity;
+            imgs.forEach(img => {
+                const r = img.getBoundingClientRect();
+                if (r.left < left) left = r.left;
+                if (r.right > right) right = r.right;
+            });
+            const w = (right > left) ? (right - left) : tmp.scrollWidth;
             document.body.removeChild(tmp);
             return w;
         };
