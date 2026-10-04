@@ -74,6 +74,30 @@ class Handler(SimpleHTTPRequestHandler):
             self.send_response(404)
             self.end_headers()
             self.wfile.write(b'Not Found')
+        if self.path == '/save-keybinds':
+            content_length = int(self.headers.get('Content-Length', 0))
+            if content_length == 0:
+                self.send_response(400); self.end_headers()
+                self.wfile.write(b'Empty request'); return
+            body = self.rfile.read(content_length)
+            try:
+                data = json.loads(body.decode('utf-8'))
+            except Exception:
+                self.send_response(400); self.end_headers()
+                self.wfile.write(b'Invalid JSON'); return
+            os.makedirs(os.path.join('content', 'data', 'control_input'), exist_ok=True)
+            path = os.path.join('content', 'data', 'control_input', 'mapping.json')
+            try:
+                with open(path, 'w', encoding='utf-8') as f:
+                    json.dump(data, f, indent=2, ensure_ascii=False)
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(b'{"status":"ok"}')
+            except Exception as e:
+                self.send_response(500); self.end_headers()
+                self.wfile.write(f'Save failed: {e}'.encode('utf-8'))
+            return
     
     def do_GET(self):
         # New: receive commands from hotkey script and relay to browsers

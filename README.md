@@ -14,6 +14,7 @@ Zum herunterladen dieses Projektes befinden sich geeignete Versionen unter den [
 -> [Steuerung](#steuerung)\
 -> [Konfiguration & Erscheinungsbild](#konfiguration--erscheinungsbild)\
 -> [Verfügbare Linien](#verfügbare-linien)\
+-> [Hinweis-Texte](#hinweis-texte)\
 -> [Fernsteuerung](#fernsteuerung)
 
 - [Sonstiges](#sonstiges)\
@@ -98,10 +99,25 @@ In folgender Tabelle sind alle verwendbaren Linien sowie eine kurze Beschreibung
 | **U15** | `U15A` | Fiktive Kombi-Linie bestehend aus U5 und U10 zwischen Hönow und Drakestraße. |
 | **U15** | `U15B` | Fiktive Kombi-Linie bestehend aus U5 (mit Trainz-Verlängerung) und U10 zwischen Weißensee und Tegelort. |
 | **U2** | `U23` | Linienführung für damalige U2-Einsetzer aus Fehrbelliner Platz kommend. |
-| **U23** | `U23+` | Fiktive Kombi-Linie bestehend aus U2 und U3. |
+| **U23** | `U23+` | Fiktive Kombi-Linie bestehend aus U2 und U3 mitsamt Mexikoplatz. |
 | **U55** | `U55` | Ehemalige Kanzlerlinie. |
 | **U55** | `U55+` | Fiktive U55 von U-Bahn Sim Berlin's Trainz Simulator 2009 Add-On. |
 | **U67** | `U67` | Fiktive Kombi-Linie bestehend aus U6 und U7. |
+
+
+
+### Hinweis-Texte
+
+Unter bestimmten voraussetzungen können Hinweistexte angezeigt werden, welche aufgrund von Bauarbeiten passende Hinweise darstellen.
+
+Durch das Anfügen von `!` am Zielstationskürzel wird am Endhalt ein Hinweis zum Bus-Ersatzverkehr angezeigt um seine Fahrt fortsetzen zu können.
+
+Durch das Anfügen von `.` an einem Kürzel einer zu überspringenden Station wird für die Station davor und danach ein Hinweis angezeigt, welcher darauf hinweist, dass diese Station zu erreichen ist, indem man den Gegenzug nimmt.
+
+Durch das Anfügen von `!` an einem Kürzel einer zu überspringenden Station wird für die Station davor und danach ein Hinweis angezeigt, welcher darauf hinweist, dass diese Station vollständig gesperrt ist und nur mit dem Busverkehr zu erreichen ist.
+
+> [!NOTE]
+> Die Hinweis-Texte sind ein fiktives Werk, da ich nicht weiß, ob die Baureihe J/JK solche Texte anzeigen kann. Sollten sich je solche Hinweis-Texte zeigen, werde ich es natürlich anpassen.
 
 
 
@@ -109,7 +125,7 @@ In folgender Tabelle sind alle verwendbaren Linien sowie eine kurze Beschreibung
 
 Die Fernsteuerung erfordert das Akzeptieren der Benutzerkontensteuerung-Anfrage die durch den Simulator ausgelöst wird. Dadurch können die nötigen Tastendrucke Systemweit erkannt und verarbeitet werden, solange das Programm aktiv ist.
 
-Die Tastenbelegung für die Fernsteuerung basiert auf die Fahrzeugsteuerung in SubwaySim 2. Sollte die Steuerung vom Spiel abweichen, kann die Belegung unter `content/data/control_input/mapping.json` bearbeitet werden.
+Die Tastenbelegung für die Fernsteuerung basiert auf die Fahrzeugsteuerung in SubwaySim 2. Sollte die Steuerung vom Spiel abweichen, kann die Belegung der Tasten über die Bearbeitungs-Oberfläche neu zugewiesen werden. Diese Oberfläche erscheint beim Drücken der Zahnradtaste neben des an/aus-Umschalters.
 
 
 

@@ -14,6 +14,7 @@ For download, suitable versions are available at the [releases](https://github.c
 -> [Controls](#controls)\
 -> [Configuration & Appearance](#configuration--appearance)\
 -> [Available Lines](#available-lines)\
+-> [Information Texts](#information-texts)\
 -> [Remote Control](#remote-control)
 
 
@@ -91,10 +92,25 @@ In the following table, all available lines are listed along with a short descri
 | **U15** | `U15A` | Fuctional combined line consisting of U5 and U10 between Hönow and Drakestraße. |
 | **U15** | `U15B` | Fuctional combined line consisting of U5 (with Trainz extension) and U10 between Weißensee and Tegelort. |
 | **U2** | `U23` | Line routing for past U2 services starting from Fehrbelliner Platz. |
-| **U23** | `U23+` | Fictional combined line consisting of U2 and U3. |
+| **U23** | `U23+` | Fictional combined line consisting of U2 and U3 including Mexikoplatz. |
 | **U55** | `U55` | Past Kanzlerlinie. |
 | **U55** | `U55+` | Fictional U55 from U-Bahn Sim Berlin's Trainz Simulator 2009 Add-On. |
 | **U67** | `U67` | Fictional combined line consisting of U6 and U7. |
+
+
+
+### Information Texts
+
+Under certain circumstances, information texts can be shown at certain stations that inform passengers about construction works.
+
+When adding `!` to a station ID in the destination input, an information text informs about a replacement bus service after this station to continue the journey.
+
+When adding `.` to a station ID in the to-be-skipped input, an information text informs about construction works at this station and that passengers can take the opposite train at the following stop to reach it.
+
+When adding `!` to a station ID in the to-be-skipped input, an information text informs about construction works at this station and that passengers can use the bus service to reach it.
+
+> [!NOTE]
+> This information text setup is entirely fictional, as I am unsure if the J/JK series has it as a feature itself. If such information text ever shows up in reality, I will obviously adjust it.
 
 
 
@@ -102,4 +118,4 @@ In the following table, all available lines are listed along with a short descri
 
 The remote control requires accepting the User Account Control prompt that's triggered by the Simulator on startup. With it, key presses can be read systemwide for as long as the Simulator is running.
 
-The keybinds for remote control are based on the vehicle control in SubwaySim 2. If there is a mismatch, you can edit the keybinds at `content/data/control_input/mapping.json`.
+The keybinds for remote control are based on the vehicle control in SubwaySim 2. If there is a mismatch, you can edit the keybinds through the editing interface. The interface appears when pressing the gear button besides the on/off toggle.

@@ -16,15 +16,24 @@ try:
     MAPPING_FILE = os.path.join(SCRIPT_DIR, "data", "control_input", "mapping.json")
     BASE_URL = "http://127.0.0.1:7001"
 
-    print(f"Loading mapping from: {MAPPING_FILE}")
-    with open(MAPPING_FILE, "r") as f:
-        mapping = json.load(f)
-    print("Mapping loaded successfully.")
+    # ---- mapping-json action name → server command ----
+    CMD_MAP = {
+        "doorsLeft":        "arrivalLeft",
+        "doorsRight":       "arrivalRight",
+        "doorClosure":      "doorLock",
+        "stopConfirmation": "doorRelease",
+    }
 
-    # ---- state ----
+    # ---- shared state ----
+    mapping = {}
+    mapping_mtime = 0
+    mapping_lock = threading.Lock()
+
     forward_held = False
     forward_timer = None
+    forward_lock = threading.Lock()
 
+    # ---- commands ----
     def send_command(cmd):
         try:
             requests.get(f"{BASE_URL}/command?cmd={cmd}", timeout=0.5)
@@ -32,47 +41,86 @@ try:
         except Exception as e:
             print(f"Error sending {cmd}: {e}")
 
-    def start_forward_timer():
-        global forward_timer
-        cancel_forward_timer()
-        forward_timer = threading.Timer(3.0, lambda: send_command("forward"))
-        forward_timer.start()
-
-    def cancel_forward_timer():
-        global forward_timer
-        if forward_timer is not None:
-            forward_timer.cancel()
-            forward_timer = None
-
-    # ---- hotkey callbacks for forward (hold-to-trigger) ----
-    def on_forward_press(e):
-        global forward_held
-        if not forward_held:
+    def start_forward_hold():
+        global forward_held, forward_timer
+        with forward_lock:
+            if forward_held:
+                return
             forward_held = True
-            cancel_forward_timer()
-            start_forward_timer()
+            if forward_timer is not None:
+                forward_timer.cancel()
+            forward_timer = threading.Timer(3.0, lambda: send_command("forward"))
+            forward_timer.start()
 
-    def on_forward_release(e):
-        global forward_held
-        forward_held = False
-        cancel_forward_timer()
+    def end_forward_hold():
+        global forward_held, forward_timer
+        with forward_lock:
+            forward_held = False
+            if forward_timer is not None:
+                forward_timer.cancel()
+                forward_timer = None
 
-    # ---- register hotkeys from mapping.json ----
-    cmd_map = {
-        "doorsLeft": "arrivalLeft",
-        "doorsRight": "arrivalRight",
-        "stopConfirmation": "doorRelease",
-        "doorClosure": "doorLock"
-    }
+    # ---- mapping loader / watcher ----
+    def load_mapping():
+        global mapping, mapping_mtime
+        try:
+            with open(MAPPING_FILE, "r", encoding="utf-8") as f:
+                new_map = json.load(f)
+            with mapping_lock:
+                mapping = new_map
+            mapping_mtime = os.path.getmtime(MAPPING_FILE)
+            print(f"[mapping] loaded: {mapping}")
+        except FileNotFoundError:
+            print(f"[mapping] waiting for {MAPPING_FILE} to appear...")
+        except Exception as e:
+            print(f"[mapping] load failed: {e}")
 
-    for action, key in mapping.items():
+    def watch_mapping():
+        while True:
+            try:
+                m = os.path.getmtime(MAPPING_FILE)
+                if m != mapping_mtime:
+                    print("[mapping] change detected")
+                    load_mapping()
+            except FileNotFoundError:
+                pass
+            except Exception as e:
+                print(f"[mapping] watcher error: {e}")
+            time.sleep(0.5)
+
+    def key_to_action(key_name):
+        with mapping_lock:
+            for action, bound in mapping.items():
+                if bound == key_name:
+                    return action
+        return None
+
+    # ---- global key hook ----
+    # A single hook fires for every key event; the action is looked up
+    # dynamically, so runtime mapping changes take effect immediately
+    # without re-registering anything.
+    def on_key_event(e):
+        action = key_to_action(e.name)
+        if action is None:
+            return
+
         if action == "forward":
-            keyboard.on_press_key(key, on_forward_press, suppress=False)
-            keyboard.on_release_key(key, on_forward_release, suppress=False)
-        else:
-            server_cmd = cmd_map.get(action, action)
-            # Use a default argument to capture the current value of server_cmd
-            keyboard.add_hotkey(key, lambda c=server_cmd: send_command(c))
+            if e.event_type == keyboard.KEY_DOWN:
+                start_forward_hold()
+            elif e.event_type == keyboard.KEY_UP:
+                end_forward_hold()
+            return
+
+        if e.event_type == keyboard.KEY_DOWN:
+            server_cmd = CMD_MAP.get(action, action)
+            send_command(server_cmd)
+
+    # ---- startup ----
+    print(f"Mapping file: {MAPPING_FILE}")
+    load_mapping()
+    threading.Thread(target=watch_mapping, daemon=True).start()
+
+    keyboard.hook(on_key_event)
 
     print("Hotkey listener active. Press Ctrl+C to stop.")
     try:

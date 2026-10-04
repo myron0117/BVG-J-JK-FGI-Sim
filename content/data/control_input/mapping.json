@@ -1,7 +1,6 @@
 {
-    "forward": "a",
-    "doorsLeft": "insert",
-    "doorsRight": "page up",
-    "stopConfirmation": "q",
-    "doorClosure": "home"
+  "forward": "a",
+  "doorsLeft": "insert",
+  "doorsRight": "page up",
+  "doorClosure": "home"
 }

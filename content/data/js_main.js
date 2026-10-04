@@ -123,16 +123,67 @@
   let liveConnectionsPages = [];        // array of arrays (each page up to 12 services)
   let liveConnectionsCurrentPage = 0;
   let liveConnectionsStationId = null;  // cache the station ID
-  let destinationFilter = null;
+  let liveConnectionsRefreshInterval = null;   // 1 s fetch + re-render
+  let liveConnectionsEpoch = 0;   // bumped whenever we want in-flight work to be discarded
+  let liveConnectionsCycleInterval = null;   // remembers the currently running cycle period
+  let liveConnectionsVisible = false;
+
+  let warningTextMode = 'full';                // 'full' | 'half'
+  let routeWarnings = new Map();               // abbrev -> warning object
+  let liveConnectionsServices = [];            // flat list of service entries
+  let liveConnectionsWarningText = null;       // { de, en } | null
+  let liveConnectionsIsHalf = false;
+  let liveConnectionsPageInterval = 10000;
 
   let extendedStations = [];
   let extendedFrameFile = '';
   let extendedPositions = [];
   let stationPositions = null;
 
+  let currentEndMarker = '';
+
+  let currentKeybinds = {
+    forward: 'a',
+    doorsLeft: 'insert',
+    doorsRight: 'page up',
+    doorClosure: 'home'
+  };
+
+  let keybindEditorActive = false;
+  let keybindEditorIndex = 0;
+  let keybindEditorDraft = null;
+
+  const KEYBIND_FUNCTIONS = [
+    { key: 'forward', labelDe: 'Beschleunigung', labelEn: 'acceleration' },
+    { key: 'doorsLeft', labelDe: 'Türfreigabe links', labelEn: 'left door release' },
+    { key: 'doorsRight', labelDe: 'Türfreigabe rechts', labelEn: 'right door release' },
+    { key: 'doorClosure', labelDe: 'Türen schließen', labelEn: 'close doors' }
+  ];
+
   const gongStandard = new Audio('audio/BVG_Gong_Standard.wav');
   const gongEnd = new Audio('audio/BVG_Gong_Endstation.wav');
   const doorSound = new Audio('audio/METRO_Türschlusssignal_Außen_2.wav');
+
+  // ---------- live connections destination filtering ----------
+  // Substrings removed from every destination text, regardless of length.
+  const DESTINATION_ALWAYS_REMOVE = ['(Berlin)', '⟳', '⟲'];
+
+  // If the destination is too wide, crop from the earliest match of one of these
+  // patterns (the match itself and everything after it is discarded).
+  const DESTINATION_CROP_PATTERNS = [
+    / - /,        // " - " (with surrounding spaces; protects hyphenated names)
+    /\//,         // "/"
+    /\bvia\b/i,   // "via" as a whole word, case-insensitive
+    /->/,         // "->"
+    /,/           // ","
+  ];
+
+  // Maximum width of a destination string before cropping is attempted.
+  const DESTINATION_MAX_WIDTH_PX = 640;
+
+  // Must match the actual CSS font-size for
+  // .information-display-live-connections-service-destination
+  const DESTINATION_FONT_SIZE_PX = 40;
 
   // ---------- helpers ----------
   const disableBtn = (btn) => { if (!btn) return; btn.style.opacity = '0.2'; btn.style.pointerEvents = 'none'; };
@@ -175,9 +226,24 @@
     if (phase === 'doorReleased') enableBtn(btnDoorLock); else disableBtn(btnDoorLock);
   }
 
+  function remoteDoorAction(viaHint) {
+    if (phase === 'normal') {
+      if (btnArrival && btnArrival.style.pointerEvents !== 'none') {
+        if (viaHint === 'left' || viaHint === 'right') currentVia = viaHint;
+        window.send('arrival');
+      }
+      return;
+    }
+    if (phase === 'arrival' || phase === 'closing') {
+      window.send('doorRelease');
+      return;
+    }
+    // doorReleased: no-op — closing is still bound to doorLock (its own key).
+  }
+
   async function fetchDepartures(stationId) {
     try {
-      const resp = await fetch(`http://127.0.0.1:7003/stops/${stationId}/departures?duration=120`);
+      const resp = await fetch(`http://127.0.0.1:7003/stops/${stationId}/departures?duration=60`);
       if (!resp.ok) throw new Error('API error');
       return await resp.json();
     } catch (e) {
@@ -193,7 +259,6 @@
     const currentProduct = (lineData && lineData.alternative === 'suburban') ? 'suburban' : 'subway';
 
     const now = Date.now();
-    const MIN_DEPARTURE_DELAY = 5 * 60 * 1000;   // 5 minutes in milliseconds
 
     const filtered = departuresJson.departures.filter(d => {
       const product = d.line && d.line.product;
@@ -202,10 +267,11 @@
       const name = (d.line && d.line.name) || '';
       if (product === currentProduct && name.toUpperCase() === currentLine) return false;
 
-      // Exclude services leaving too soon
+      // Skip anything without a timestamp, or anything that would render as "0'"
+      // on screen (i.e. has already departed).
       if (!d.when) return false;
       const departureTime = new Date(d.when).getTime();
-      if (departureTime - now < MIN_DEPARTURE_DELAY) return false;
+      if (departureTime <= now) return false;
 
       return true;
     });
@@ -297,75 +363,225 @@
   }
 
   function startLiveConnectionsTimer() {
-    if (isRemote) return;          // only on main page
+    if (isRemote) return;
     if (liveConnectionsTimer) clearTimeout(liveConnectionsTimer);
-    liveConnectionsTimer = setTimeout(() => showLiveConnections(), 10000);
+    liveConnectionsTimer = setTimeout(async () => {
+      liveConnectionsTimer = null;
+      liveConnectionsVisible = true;
+      await showLiveConnections();
+      if (!liveConnectionsVisible) return;
+      if (liveConnectionsRefreshInterval) clearInterval(liveConnectionsRefreshInterval);
+      liveConnectionsRefreshInterval = setInterval(showLiveConnections, 2000);
+    }, 10000);
+  }
+
+  function computeLiveConnectionsPlan() {
+    const station = routeStations[currentRouteIndex];
+    const warning = station ? routeWarnings.get(station.abbrev) : null;
+    const services = liveConnectionsServices;
+
+    const pages = [];
+    let warningText = null;
+    let isHalf = false;
+    let pageInterval = 10000;
+    const MAX_PAGES = 3;
+
+    if (!warning) {
+      for (let i = 0; i < services.length && pages.length < MAX_PAGES; i += 12) {
+        pages.push({ kind: 'services', items: services.slice(i, i + 12) });
+      }
+      return { pages, warningText, isHalf, pageInterval };
+    }
+
+    warningText = buildWarningText(warning);
+
+    if (warningTextMode === 'half') {
+      isHalf = true;
+      pageInterval = 5000;
+      for (let i = 0; i < services.length && pages.length < 5; i += 6) {
+        pages.push({ kind: 'services', items: services.slice(i, i + 6) });
+      }
+      if (pages.length === 0) pages.push({ kind: 'services', items: [] });
+    } else {
+      pages.push({ kind: 'warning' });
+      for (let i = 0; i < services.length && pages.length < MAX_PAGES; i += 12) {
+        pages.push({ kind: 'services', items: services.slice(i, i + 12) });
+      }
+    }
+
+    return { pages, warningText, isHalf, pageInterval };
+  }
+
+  function refreshLiveConnectionsPlan() {
+    const plan = computeLiveConnectionsPlan();
+    liveConnectionsPages = plan.pages;
+    liveConnectionsWarningText = plan.warningText;
+    liveConnectionsIsHalf = plan.isHalf;
+    liveConnectionsPageInterval = plan.pageInterval;
+    if (liveConnectionsCurrentPage >= liveConnectionsPages.length) {
+      liveConnectionsCurrentPage = 0;
+    }
+    return plan;
+  }
+
+  function startLiveConnectionsCycle(intervalMs) {
+    // No-op if we're already cycling at the same period.
+    if (liveConnectionsInterval && liveConnectionsCycleInterval === intervalMs) return;
+    if (liveConnectionsInterval) clearInterval(liveConnectionsInterval);
+    liveConnectionsCycleInterval = intervalMs;
+    liveConnectionsInterval = setInterval(() => {
+      if (liveConnectionsPages.length <= 1) return;
+      liveConnectionsCurrentPage = (liveConnectionsCurrentPage + 1) % liveConnectionsPages.length;
+      renderLiveConnectionsPage(liveConnectionsCurrentPage);
+      updatePageIndicator();
+    }, intervalMs);
+  }
+
+  function restartLiveConnectionsIfVisible() {
+    const lc = document.getElementById('information-display-live-connections');
+    if (!lc || lc.style.visibility !== 'visible') return;
+    refreshLiveConnectionsPlan();
+    liveConnectionsCurrentPage = 0;
+    renderLiveConnectionsPage(0);
+    updatePageIndicator();
+    startLiveConnectionsCycle(liveConnectionsPageInterval);
+
+    // Tell pop-outs to reset page and take the new mode immediately.
+    if (!isRemote && window.broadcastChannel) {
+      window.broadcastChannel.postMessage({
+        type: 'liveConnections',
+        pages: liveConnectionsPages,
+        warningText: liveConnectionsWarningText,
+        isHalf: liveConnectionsIsHalf,
+        pageInterval: liveConnectionsPageInterval,
+        restart: true
+      });
+    }
+  }
+
+  // Current visual state: 'full' on the warning page, 'half' when services share
+  // the display with a half-warning, 'none' otherwise.
+  function currentWarningDisplayMode() {
+    const page = liveConnectionsPages[liveConnectionsCurrentPage];
+    if (page && page.kind === 'warning') return 'full';
+    if (liveConnectionsIsHalf) return 'half';
+    return 'none';
+  }
+
+  function setWarningDisplay(mode) {
+    const header = document.querySelector('.information-display-live-connections-header');
+    const fullDe = document.querySelector('.information-display-live-connections-warning-text-full-de');
+    const fullEn = document.querySelector('.information-display-live-connections-warning-text-full-en');
+    const halfDe = document.querySelector('.information-display-live-connections-warning-text-half-de');
+    const halfEn = document.querySelector('.information-display-live-connections-warning-text-half-en');
+
+    if (header) {
+      // Only touch display. Never visibility: an inline visibility:visible on a
+      // child overrides visibility:hidden on the parent and leaves the header
+      // floating on screen whenever the panel itself is hidden.
+      header.style.display = (mode === 'full') ? 'none' : '';
+    }
+
+    const showFull = (mode === 'full');
+    const showHalf = (mode === 'half');
+
+    if (fullDe) fullDe.style.display = showFull ? '' : 'none';
+    if (fullEn) fullEn.style.display = showFull ? '' : 'none';
+    if (halfDe) halfDe.style.display = showHalf ? '' : 'none';
+    if (halfEn) halfEn.style.display = showHalf ? '' : 'none';
+  }
+
+  function applyWarningTextToDom(texts) {
+    const t = texts || { de: '', en: '' };
+    const fullDe = document.querySelector('.information-display-live-connections-warning-text-full-de');
+    const fullEn = document.querySelector('.information-display-live-connections-warning-text-full-en');
+    const halfDe = document.querySelector('.information-display-live-connections-warning-text-half-de');
+    const halfEn = document.querySelector('.information-display-live-connections-warning-text-half-en');
+    if (fullDe) fullDe.textContent = t.de;
+    if (fullEn) fullEn.textContent = t.en;
+    if (halfDe) halfDe.textContent = t.de;
+    if (halfEn) halfEn.textContent = t.en;
   }
 
   async function showLiveConnections() {
     if (!routeActive) return;
+    if (!liveConnectionsVisible) return;
+
     const station = routeStations[currentRouteIndex];
-    const stationId = station.apiID;
+    const stationId = station && station.apiID;
     if (!stationId) return;
 
-    // Fetch if not already cached for this station
-    if (liveConnectionsStationId !== stationId) {
-      liveConnectionsStationId = stationId;
-      const json = await fetchDepartures(stationId);
-      liveConnectionsData = json;
-      liveConnectionsPages = processDepartures(json);
-    }
+    const myEpoch = liveConnectionsEpoch;
+
+    const json = await fetchDepartures(stationId);
+
+    // Discard the whole cycle if we were hidden while the fetch was in flight,
+    // or if the epoch advanced (route reset, new station, mode toggle).
+    if (myEpoch !== liveConnectionsEpoch) return;
+    if (!liveConnectionsVisible) return;
+    if (!routeActive) return;
+
+    liveConnectionsData = json;
+    liveConnectionsServices = processDepartures(json).flat();
+    liveConnectionsStationId = stationId;
+
+    const plan = refreshLiveConnectionsPlan();
 
     if (liveConnectionsPages.length === 0) {
       hideLiveConnections();
       return;
     }
 
-    liveConnectionsCurrentPage = 0;
+    if (liveConnectionsCurrentPage >= liveConnectionsPages.length) {
+      liveConnectionsCurrentPage = 0;
+    }
+
     renderLiveConnectionsPage(liveConnectionsCurrentPage);
     updatePageIndicator();
 
-    // Show the container
     const lcContainer = document.getElementById('information-display-live-connections');
-    if (lcContainer) lcContainer.style.visibility = config.showLiveConnectionsOverview ? 'visible' : 'hidden';
+    if (lcContainer) {
+      lcContainer.style.visibility = config.showLiveConnectionsOverview ? 'visible' : 'hidden';
+    }
 
-    // Update grid image for current appearance
-    updateLiveConnectionsGridSrc();
-
-    // ★★★ BROADCAST PAGES TO POP‑OUTS ★★★
-    if (!isRemote && window.broadcastChannel && liveConnectionsPages.length > 0) {
+    if (!isRemote && window.broadcastChannel) {
       window.broadcastChannel.postMessage({
         type: 'liveConnections',
-        pages: liveConnectionsPages
+        pages: liveConnectionsPages,
+        warningText: liveConnectionsWarningText,
+        isHalf: liveConnectionsIsHalf,
+        pageInterval: liveConnectionsPageInterval
       });
     }
 
-    // Start page cycling
-    if (liveConnectionsInterval) clearInterval(liveConnectionsInterval);
-    liveConnectionsInterval = setInterval(() => {
-      liveConnectionsCurrentPage = (liveConnectionsCurrentPage + 1) % liveConnectionsPages.length;
-      renderLiveConnectionsPage(liveConnectionsCurrentPage);
-      updatePageIndicator();
-    }, 10000);
-
-    // Start time updates
-    if (liveConnectionsTimeInterval) clearInterval(liveConnectionsTimeInterval);
-    liveConnectionsTimeInterval = setInterval(updateLiveConnectionTimes, 5000);
+    startLiveConnectionsCycle(plan.pageInterval);
   }
 
   function hideLiveConnections() {
+    liveConnectionsEpoch++;
+    liveConnectionsVisible = false;
+
     const lcContainer = document.getElementById('information-display-live-connections');
     if (lcContainer) lcContainer.style.visibility = 'hidden';
 
+    setWarningDisplay('none');
+    updateLiveConnectionsGridSrc();
+
     if (liveConnectionsTimer) { clearTimeout(liveConnectionsTimer); liveConnectionsTimer = null; }
+    if (liveConnectionsRefreshInterval) { clearInterval(liveConnectionsRefreshInterval); liveConnectionsRefreshInterval = null; }
     if (liveConnectionsInterval) { clearInterval(liveConnectionsInterval); liveConnectionsInterval = null; }
+    liveConnectionsCycleInterval = null;
     if (liveConnectionsTimeInterval) { clearInterval(liveConnectionsTimeInterval); liveConnectionsTimeInterval = null; }
+
     liveConnectionsCurrentPage = 0;
     liveConnectionsStationId = null;
     liveConnectionsData = null;
     liveConnectionsPages = [];
+    liveConnectionsServices = [];
+    liveConnectionsWarningText = null;
+    liveConnectionsIsHalf = false;
+    liveConnectionsPageInterval = 10000;
 
-    // Tell all pop‑outs to hide as well
     if (!isRemote && window.broadcastChannel) {
       window.broadcastChannel.postMessage({ type: 'hideLiveConnections' });
     }
@@ -374,14 +590,30 @@
   function renderLiveConnectionsPage(pageIdx) {
     const lcContainer = document.getElementById('information-display-live-connections');
     if (!lcContainer) return;
-    // Remove existing service rows (all children with class 'information-display-live-connections-service')
+
+    const page = liveConnectionsPages[pageIdx];
+
+    // --- 1. Update visuals (grid image, header, warning text) first. ---
+    if (!page) {
+      setWarningDisplay('none');
+      updateLiveConnectionsGridSrc();
+    } else if (page.kind === 'warning') {
+      setWarningDisplay('full');
+      applyWarningTextToDom(liveConnectionsWarningText);
+      updateLiveConnectionsGridSrc();
+    } else {
+      setWarningDisplay(liveConnectionsIsHalf ? 'half' : 'none');
+      if (liveConnectionsIsHalf) applyWarningTextToDom(liveConnectionsWarningText);
+      updateLiveConnectionsGridSrc();
+    }
+
+    // --- 2. Then swap the service rows in one batch. ---
     const oldRows = lcContainer.querySelectorAll('.information-display-live-connections-service');
     oldRows.forEach(el => el.remove());
 
-    const page = liveConnectionsPages[pageIdx];
-    if (!page) return;
-    const html = buildLiveConnectionsPage(page);
-    // Insert after the page indicator row (or before the first service row)
+    if (!page || page.kind === 'warning' || !page.items || page.items.length === 0) return;
+
+    const html = buildLiveConnectionsPage(page.items);
     const indicatorRow = lcContainer.querySelector('.information-display-live-connections-page-indicator-row');
     if (indicatorRow) {
       indicatorRow.insertAdjacentHTML('afterend', html);
@@ -395,9 +627,10 @@
     if (!lcContainer) return;
     const indicators = lcContainer.querySelectorAll('.information-display-live-connections-page-indicator');
     const totalPages = liveConnectionsPages.length;
-    const isDark = config.appearance === 'dark';
 
-    // Hide all if only one page
+    const isWarningPage = currentWarningDisplayMode() === 'full';
+    const useDark = isWarningPage || config.appearance === 'dark';
+
     const indicatorRow = lcContainer.querySelector('.information-display-live-connections-page-indicator-row');
     if (totalPages <= 1) {
       if (indicatorRow) indicatorRow.style.display = 'none';
@@ -412,7 +645,7 @@
       }
       img.style.display = '';
       const filled = i === liveConnectionsCurrentPage ? '1' : '0';
-      img.src = `visuals/interface/information_display/connections_overview/page_indicator_${filled}_${isDark ? 'dark' : 'light'}.svg`;
+      img.src = `visuals/interface/information_display/connections_overview/page_indicator_${filled}_${useDark ? 'dark' : 'light'}.svg`;
     });
   }
 
@@ -448,14 +681,19 @@
       bus: { left: '29px', top: '20px', height: '44px', iconFolder: null },
     };
 
-    const leftTops = [580, 662, 746, 830, 914, 998];
-    const rightTops = [580, 662, 746, 830, 914, 998];
+    const tops = [580, 662, 746, 830, 914, 998];
     const layout = [];
-    for (let i = 0; i < 12; i++) {
-      layout.push({
-        left: i < 6 ? '0px' : '960px',
-        top: i < 6 ? leftTops[i] + 'px' : rightTops[i - 6] + 'px'
-      });
+    if (liveConnectionsIsHalf) {
+      for (let i = 0; i < 6; i++) {
+        layout.push({ left: '960px', top: tops[i] + 'px' });
+      }
+    } else {
+      for (let i = 0; i < 12; i++) {
+        layout.push({
+          left: i < 6 ? '0px' : '960px',
+          top: i < 6 ? tops[i] + 'px' : tops[i - 6] + 'px'
+        });
+      }
     }
 
     let html = '';
@@ -463,7 +701,7 @@
       if (idx >= 12) return;
       const product = d.line && d.line.product;
       const lineName = (d.line && d.line.name) || '';
-      const direction = applyDestinationFilter(d.direction || '');
+      const direction = filterDestinationText(d.direction || '');
       const when = d.when || '';
       const minutes = when ? Math.ceil((new Date(when).getTime() - Date.now()) / 60000) : 0;
       const pos = layout[idx];   // <-- layout coordinates
@@ -507,15 +745,39 @@
     return html;
   }
 
-  function applyDestinationFilter(direction) {
-    if (!direction) return '';
-    let result = direction;
-    if (destinationFilter) {
-      for (const [from, to] of Object.entries(destinationFilter)) {
-        result = result.split(from).join(to);
+  function filterDestinationText(rawText) {
+    if (!rawText) return '';
+    let text = String(rawText);
+
+    // Always remove the unconditionally-stripped substrings.
+    for (const token of DESTINATION_ALWAYS_REMOVE) {
+      text = text.split(token).join('');
+    }
+    text = text.trim();
+
+    // Measure with the weight actually used by the current appearance.
+    const isDark = config && config.appearance === 'dark';
+    const fontWeight = isDark ? 'normal' : 'bold';
+    const width = measureTextWidth(text, DESTINATION_FONT_SIZE_PX, 'TransitPro', fontWeight);
+
+    if (width <= DESTINATION_MAX_WIDTH_PX) return text;
+
+    // Too wide: find the earliest crop-token match and cut from there.
+    let earliestIdx = -1;
+    for (const pattern of DESTINATION_CROP_PATTERNS) {
+      const m = pattern.exec(text);
+      if (m && (earliestIdx === -1 || m.index < earliestIdx)) {
+        earliestIdx = m.index;
       }
     }
-    return result.trim();
+
+    if (earliestIdx > 0) {
+      text = text.substring(0, earliestIdx).trim();
+    }
+
+    // If no crop token was found, the text is returned as-is and may overflow —
+    // this is intentional pending documentation of the real system's behaviour.
+    return text;
   }
 
   function liveConnectionsGridSrc() {
@@ -531,43 +793,50 @@
     return prefix + (isDark ? 'grid_default_dark.svg' : 'grid_default_light.svg');
   }
 
-  function updateLiveConnectionsGridSrc() {
-    const gridImg = document.querySelector('.information-display-live-connections-grid');
-    if (gridImg) gridImg.src = liveConnectionsGridSrc();
+  // Returns the grid image src for the current page/mode, honouring warnings.
+  function computeGridSrc() {
+    const mode = currentWarningDisplayMode();
+    if (mode === 'full') {
+      return 'visuals/interface/information_display/connections_overview/warning/warning_full_default.svg';
+    }
+    if (mode === 'half') {
+      const isDark = config.appearance === 'dark';
+      return `visuals/interface/information_display/connections_overview/warning/warning_half_default_${isDark ? 'dark' : 'light'}.svg`;
+    }
+    return liveConnectionsGridSrc();
   }
 
-  function showLiveConnectionsRemote(pages) {
+  function updateLiveConnectionsGridSrc() {
+    const gridImg = document.querySelector('.information-display-live-connections-grid');
+    if (gridImg) gridImg.src = computeGridSrc();
+  }
+
+  function showLiveConnectionsRemote(payload) {
+    const { pages, warningText, isHalf, pageInterval, restart } = payload || {};
     if (!pages || pages.length === 0) {
       hideLiveConnections();
       return;
     }
+
     liveConnectionsPages = pages;
-    liveConnectionsCurrentPage = 0;
+    liveConnectionsWarningText = warningText || null;
+    liveConnectionsIsHalf = !!isHalf;
+    liveConnectionsPageInterval = pageInterval || 10000;
+
+    if (restart) {
+      liveConnectionsCurrentPage = 0;
+    } else if (liveConnectionsCurrentPage >= liveConnectionsPages.length) {
+      liveConnectionsCurrentPage = 0;
+    }
+
     renderLiveConnectionsPage(liveConnectionsCurrentPage);
     updatePageIndicator();
+
     const lcContainer = document.getElementById('information-display-live-connections');
     if (lcContainer) lcContainer.style.visibility = config.showLiveConnectionsOverview ? 'visible' : 'hidden';
     updateLiveConnectionsGridSrc();
 
-    // Send the complete pages to all pop‑outs
-    if (!isRemote && window.broadcastChannel && liveConnectionsPages.length > 0) {
-      window.broadcastChannel.postMessage({
-        type: 'liveConnections',
-        pages: liveConnectionsPages
-      });
-    }
-
-    // Start page cycling on pop‑out too
-    if (liveConnectionsInterval) clearInterval(liveConnectionsInterval);
-    liveConnectionsInterval = setInterval(() => {
-      liveConnectionsCurrentPage = (liveConnectionsCurrentPage + 1) % liveConnectionsPages.length;
-      renderLiveConnectionsPage(liveConnectionsCurrentPage);
-      updatePageIndicator();
-    }, 10000);
-
-    // Start time updates
-    if (liveConnectionsTimeInterval) clearInterval(liveConnectionsTimeInterval);
-    liveConnectionsTimeInterval = setInterval(updateLiveConnectionTimes, 5000);
+    startLiveConnectionsCycle(liveConnectionsPageInterval);
   }
 
   function playSound(audio) {
@@ -598,10 +867,10 @@
     throw new Error('Line not found in any product folder');
   }
 
-  function measureTextWidth(text, fontSize, fontFamily = 'TransitPro') {
+  function measureTextWidth(text, fontSize, fontFamily = 'TransitPro', fontWeight = 'bold') {
     const c = document.createElement('canvas');
     const ctx = c.getContext('2d');
-    ctx.font = `bold ${fontSize}px ${fontFamily}, sans-serif`;
+    ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}, sans-serif`;
     return ctx.measureText(text).width;
   }
 
@@ -700,11 +969,14 @@
   }
 
   function serviceIconHTML(service, size) {
+    // In dark mode, use the brighter grayscale variant for passed-line icons.
+    const grayFolder = (config && config.appearance === 'dark') ? 'grayscale_dark' : 'grayscale';
+
     if (service.startsWith('U')) {
       if (size === 'simple') {
         return `<div style="width:52px; height:31px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/subway_lines/${service}.svg" style="width:52px; flex-shrink:0;"></div>`;
       } else if (size === 'extended' || size === 'grayscale') {
-        const base = size === 'grayscale' ? 'visuals/service_icons/grayscale/subway_lines/' : 'visuals/service_icons/subway_lines/';
+        const base = size === 'grayscale' ? `visuals/service_icons/${grayFolder}/subway_lines/` : 'visuals/service_icons/subway_lines/';
         return `<div style="width:26px; height:15px; display:flex; justify-content:center; align-items:center;"><img src="${base}${service}.svg" style="width:26px; flex-shrink:0;"></div>`;
       } else if (size === 'exits') {
         return `<div style="width:88px; height:52px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/subway_lines/${service}.svg" style="width:88px; flex-shrink:0;"></div>`;
@@ -717,7 +989,7 @@
       if (size === 'simple') {
         return `<div style="width:56px; height:31px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/suburban_lines/${service}.svg" style="width:62px; flex-shrink:0;"></div>`;
       } else if (size === 'extended' || size === 'grayscale') {
-        const base = size === 'grayscale' ? 'visuals/service_icons/grayscale/suburban_lines/' : 'visuals/service_icons/suburban_lines/';
+        const base = size === 'grayscale' ? `visuals/service_icons/${grayFolder}/suburban_lines/` : 'visuals/service_icons/suburban_lines/';
         return `<div style="width:26px; height:15px; display:flex; justify-content:center; align-items:center;"><img src="${base}${service}.svg" style="width:30px; flex-shrink:0;"></div>`;
       } else if (size === 'exits') {
         return `<div style="width:96px; height:52px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/suburban_lines/${service}.svg" style="width:104px; flex-shrink:0;"></div>`;
@@ -730,35 +1002,35 @@
       fernverkehr: {
         simple: `<div style="width:31px; height:31px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/fernverkehr.svg" style="width:35px; flex-shrink:0;"></div>`,
         extended: `<div style="width:17px; height:15px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/fernverkehr.svg" style="width:17px; flex-shrink:0;"></div>`,
-        grayscale: `<div style="width:17px; height:15px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/grayscale/fernverkehr.svg" style="width:17px; flex-shrink:0;"></div>`,
+        grayscale: `<div style="width:17px; height:15px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/${grayFolder}/fernverkehr.svg" style="width:17px; flex-shrink:0;"></div>`,
         exits: `<div style="width:52px; height:52px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/fernverkehr.svg" style="width:58px; flex-shrink:0;"></div>`,
         direction: `<div style="width:155px; height:154px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/fernverkehr.svg" style="width:173px; flex-shrink:0;"></div>`
       },
       bahn: {
         simple: `<div style="width:30px; height:31px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/bahn.svg" style="width:42px; flex-shrink:0;"></div>`,
         extended: `<div style="width:21px; height:15px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/bahn.svg" style="width:21px; flex-shrink:0;"></div>`,
-        grayscale: `<div style="width:21px; height:15px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/grayscale/bahn.svg" style="width:21px; flex-shrink:0;"></div>`,
+        grayscale: `<div style="width:21px; height:15px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/${grayFolder}/bahn.svg" style="width:21px; flex-shrink:0;"></div>`,
         exits: `<div style="width:53px; height:52px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/bahn.svg" style="width:71px; flex-shrink:0;"></div>`,
         direction: `<div style="width:155px; height:154px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/bahn.svg" style="width:211px; flex-shrink:0;"></div>`
       },
       sbahn: {
         simple: `<div style="width:31px; height:31px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/sbahn.svg" style="width:35px; flex-shrink:0;"></div>`,
         extended: `<div style="width:17px; height:15px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/sbahn.svg" style="width:17px; flex-shrink:0;"></div>`,
-        grayscale: `<div style="width:17px; height:15px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/grayscale/sbahn.svg" style="width:17px; flex-shrink:0;"></div>`,
+        grayscale: `<div style="width:17px; height:15px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/${grayFolder}/sbahn.svg" style="width:17px; flex-shrink:0;"></div>`,
         exits: `<div style="width:52px; height:52px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/sbahn.svg" style="width:58px; flex-shrink:0;"></div>`,
         direction: `<div style="width:155px; height:154px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/sbahn.svg" style="width:173px; flex-shrink:0;"></div>`
       },
       jelbi: {
         simple: `<div style="width:31px; height:31px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/jelbi.svg" style="width:31px; flex-shrink:0;"></div>`,
         extended: `<div style="width:15px; height:15px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/jelbi.svg" style="width:15px; flex-shrink:0;"></div>`,
-        grayscale: `<div style="width:15px; height:15px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/grayscale/jelbi.svg" style="width:15px; flex-shrink:0;"></div>`,
+        grayscale: `<div style="width:15px; height:15px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/${grayFolder}/jelbi.svg" style="width:15px; flex-shrink:0;"></div>`,
         exits: `<div style="width:52px; height:52px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/jelbi.svg" style="width:52px; flex-shrink:0;"></div>`,
         direction: `<div style="width:154px; height:154px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/jelbi.svg" style="width:154px; flex-shrink:0;"></div>`
       },
       flughafen: {
         simple: `<div style="width:31px; height:31px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/flughafen.svg" style="width:35px; flex-shrink:0;"></div>`,
         extended: `<div style="width:17px; height:15px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/flughafen.svg" style="width:17px; flex-shrink:0;"></div>`,
-        grayscale: `<div style="width:17px; height:15px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/grayscale/flughafen.svg" style="width:17px; flex-shrink:0;"></div>`,
+        grayscale: `<div style="width:17px; height:15px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/${grayFolder}/flughafen.svg" style="width:17px; flex-shrink:0;"></div>`,
         exits: `<div style="width:52px; height:52px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/flughafen.svg" style="width:58px; flex-shrink:0;"></div>`,
         direction: `<div style="width:155px; height:154px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/flughafen.svg" style="width:173px; flex-shrink:0;"></div>`
       },
@@ -766,7 +1038,7 @@
       bus: {
         simple: `<div style="width:31px; height:31px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/bus.svg" style="width:35px; flex-shrink:0;"></div>`,
         extended: `<div style="width:17px; height:15px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/bus.svg" style="width:17px; flex-shrink:0;"></div>`,
-        grayscale: `<div style="width:17px; height:15px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/grayscale/bus.svg" style="width:17px; flex-shrink:0;"></div>`,
+        grayscale: `<div style="width:17px; height:15px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/${grayFolder}/bus.svg" style="width:17px; flex-shrink:0;"></div>`,
         exits: `<div style="width:52px; height:52px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/bus.svg" style="width:58px; flex-shrink:0;"></div>`,
         direction: `<div style="width:155px; height:154px; display:flex; justify-content:center; align-items:center;"><img src="visuals/service_icons/bus.svg" style="width:173px; flex-shrink:0;"></div>`
       },
@@ -821,8 +1093,9 @@
         alwaysShowExitsOverview: false,
         showLiveConnectionsOverview: true,
         fallbackLayer: 1,
-        appearance: 'light',
-        combinedLineDesign: 'alternative'
+        appearance: 'dark',
+        combinedLineDesign: 'alternative',
+        warningTextMode: 'full'
       };
     }
     try {
@@ -830,8 +1103,114 @@
     } catch (e) {
       console.error('Station positions file missing');
     }
+
+    warningTextMode = config.warningTextMode === 'half' ? 'half' : 'full';
+
     applyConfigUI();
     if (!isRemote) updateConfirmButtonState();
+  }
+
+  // ---------- keybind editor ----------
+  async function loadKeybinds() {
+    try {
+      const r = await fetch('data/control_input/mapping.json?t=' + Date.now());
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const data = await r.json();
+      if (data && typeof data === 'object') Object.assign(currentKeybinds, data);
+    } catch (e) {
+      // defaults stand
+    }
+  }
+
+  function isModifierOnly(e) {
+    return ['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'NumLock', 'ScrollLock', 'OS'].includes(e.key);
+  }
+
+  function normalizeKey(e) {
+    const k = e.key;
+    if (k.length === 1) return k.toLowerCase();
+    const named = {
+      ' ': 'space', 'Space': 'space',
+      'Escape': 'escape', 'Esc': 'escape',
+      'Enter': 'enter', 'Tab': 'tab',
+      'Backspace': 'backspace', 'Delete': 'delete',
+      'Insert': 'insert', 'Home': 'home', 'End': 'end',
+      'PageUp': 'page up', 'PageDown': 'page down',
+      'ArrowUp': 'up', 'ArrowDown': 'down',
+      'ArrowLeft': 'left', 'ArrowRight': 'right',
+      'PrintScreen': 'print screen',
+      'Pause': 'pause', 'ContextMenu': 'menu'
+    };
+    if (named[k]) return named[k];
+    if (/^F\d{1,2}$/.test(k)) return k.toLowerCase();
+    return k.toLowerCase();
+  }
+
+  function openKeybindEditor() {
+    if (keybindEditorActive) return;
+    keybindEditorActive = true;
+    keybindEditorIndex = 0;
+    keybindEditorDraft = Object.assign({}, currentKeybinds);
+    const overlay = document.getElementById('configuration-remote-control-keybinds');
+    if (overlay) overlay.style.display = 'block';
+    updateKeybindEditorUI();
+    document.addEventListener('keydown', handleKeybindEditorKey, true);
+  }
+
+  function updateKeybindEditorUI() {
+    const fn = KEYBIND_FUNCTIONS[keybindEditorIndex];
+    if (!fn) return;
+    const lang = (config && config.language) || 'de';
+    const funcLabel = document.getElementById('lang-configuration-remote-control-keybinds-function');
+    const counterLabel = document.getElementById('lang-configuration-remote-control-keybinds-counter');
+    if (funcLabel) funcLabel.textContent = (lang === 'en') ? fn.labelEn : fn.labelDe;
+    if (counterLabel) counterLabel.textContent = `${keybindEditorIndex + 1}/${KEYBIND_FUNCTIONS.length}`;
+  }
+
+  function handleKeybindEditorKey(e) {
+    if (!keybindEditorActive) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (isModifierOnly(e)) return;
+    const key = normalizeKey(e);
+    if (!key) return;
+    const fn = KEYBIND_FUNCTIONS[keybindEditorIndex];
+    if (!fn) return;
+    keybindEditorDraft[fn.key] = key;
+    keybindEditorIndex++;
+    if (keybindEditorIndex >= KEYBIND_FUNCTIONS.length) {
+      closeKeybindEditor(true);
+    } else {
+      updateKeybindEditorUI();
+    }
+  }
+
+  function closeKeybindEditor(save) {
+    document.removeEventListener('keydown', handleKeybindEditorKey, true);
+    const overlay = document.getElementById('configuration-remote-control-keybinds');
+    if (overlay) overlay.style.display = 'none';
+    keybindEditorActive = false;
+
+    if (save && keybindEditorDraft) {
+      Object.assign(currentKeybinds, keybindEditorDraft);
+      saveKeybindsToServer(currentKeybinds);
+    }
+    keybindEditorDraft = null;
+    keybindEditorIndex = 0;
+  }
+
+  async function saveKeybindsToServer(kb) {
+    try {
+      const r = await fetch('/save-keybinds', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(kb)
+      });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      console.log('[J/JK] keybinds saved:', kb);
+    } catch (err) {
+      console.warn('[J/JK] keybinds save failed:', err);
+    }
   }
 
   function applyConfigUI() {
@@ -857,6 +1236,8 @@
     setActive(appearanceDarkBtn, config.appearance === 'dark');
     setActive(btnRemoteY, allowRemoteControl);
     setActive(btnRemoteN, !allowRemoteControl);
+    setActive($('#configWarningTextFullButton'), config.warningTextMode === 'full');
+    setActive($('#configWarningTextHalfButton'), config.warningTextMode === 'half');
 
     if (!config.showLiveConnectionsOverview) {
       const lcContainer = document.getElementById('information-display-live-connections');
@@ -870,7 +1251,8 @@
         type: 'configUpdate',
         config: {
           showLiveConnectionsOverview: config.showLiveConnectionsOverview,
-          combinedLineDesign: config.combinedLineDesign
+          combinedLineDesign: config.combinedLineDesign,
+          warningTextMode: config.warningTextMode
         }
       });
     }
@@ -910,6 +1292,21 @@
 
       btnCombinedAlt.onclick = () => { config.combinedLineDesign = 'alternative'; applyConfigUI(); };
       btnCombinedReal.onclick = () => { config.combinedLineDesign = 'realistic'; applyConfigUI(); };
+
+      const btnWarningFull = $('#configWarningTextFullButton');
+      const btnWarningHalf = $('#configWarningTextHalfButton');
+      if (btnWarningFull) btnWarningFull.onclick = () => {
+        config.warningTextMode = 'full';
+        warningTextMode = 'full';
+        applyConfigUI();
+        restartLiveConnectionsIfVisible();
+      };
+      if (btnWarningHalf) btnWarningHalf.onclick = () => {
+        config.warningTextMode = 'half';
+        warningTextMode = 'half';
+        applyConfigUI();
+        restartLiveConnectionsIfVisible();
+      };
     }
 
 
@@ -968,6 +1365,13 @@
     const isDark = config.appearance === 'dark';
     document.body.classList.toggle('dark-mode', isDark);
     toggleDarkModeStyles(isDark);
+
+    const lcEl = document.getElementById('information-display-live-connections');
+    if (lcEl && lcEl.style.visibility === 'visible') {
+      refreshLiveConnectionsPlan();
+      renderLiveConnectionsPage(liveConnectionsCurrentPage);
+      updatePageIndicator();
+    }
 
     // Swap interface overlays
     overlayImages.forEach(img => { img.src = currentOverlaySrc(); });
@@ -1125,6 +1529,7 @@
                     top: 394px !important;
                     font-weight: normal !important;
                 }
+                .dark-mode #line-extended-gaps { visibility: visible !important; }
             `;
         document.head.appendChild(styleEl);
       }
@@ -1193,6 +1598,17 @@
         window.send('removeScript');
       }
     });
+
+    const btnRemoteSettings = document.getElementById('configRemoteControlSettingsButton');
+    if (btnRemoteSettings) {
+      btnRemoteSettings.onclick = null;
+      btnRemoteSettings.addEventListener('click', openKeybindEditor);
+    }
+    const btnRemoteSettingsCancel = document.getElementById('configRemoteControlSettingsCancelButton');
+    if (btnRemoteSettingsCancel) {
+      btnRemoteSettingsCancel.onclick = null;
+      btnRemoteSettingsCancel.addEventListener('click', () => closeKeybindEditor(false));
+    }
   }
 
   // ------------------------------------------------------------
@@ -1218,16 +1634,13 @@
           break;
 
         case 'arrivalLeft':
-          // Only if Arrival button is enabled (phase = normal, after gong)
-          if (btnArrival && btnArrival.style.pointerEvents === 'none') break;
-          currentVia = 'left';
-          window.send('arrival');   // calls shortBeforeStop and broadcasts via
+          // Context-sensitive: first press = arrival (left side override),
+          // second press (while in arrival) = door release, closing = reopen.
+          remoteDoorAction('left');
           break;
 
         case 'arrivalRight':
-          if (btnArrival && btnArrival.style.pointerEvents === 'none') break;
-          currentVia = 'right';
-          window.send('arrival');
+          remoteDoorAction('right');
           break;
 
         case 'doorRelease':
@@ -1274,6 +1687,7 @@
 
     validateStation(inputStart, 'start');
     validateStation(inputEnd, 'end');
+    validateStation(inputSkip, 'skip');
     updateConfirmButtonState();
   }
 
@@ -1285,26 +1699,35 @@
       updateConfirmButtonState();
       return;
     }
-    if (type === 'skip') {
-      const raw = input.value.trim();
-      const tokens = raw.split(/\s+/).filter(t => t);
 
-      // Validate all tokens are real station abbreviations
+    if (type === 'skip') {
+      const tokens = input.value.trim().split(/\s+/).filter(t => t);
+
+      // Establish the effective route endpoints for the skip check.
+      const startRaw = inputStart.value.trim().replace(/[.!]$/, '');
+      const endRaw = inputEnd.value.trim().replace(/[.!]$/, '');
+      const endpointSet = new Set();
+      if (startRaw) endpointSet.add(startRaw.toUpperCase());
+      if (endRaw) endpointSet.add(endRaw.toUpperCase());
+
       let allValid = true;
+      let hasEndpoint = false;
       const correctedTokens = tokens.map(t => {
-        const correct = findStationAbbrev(t);
-        if (!correct) allValid = false;
-        return correct || t;
+        const p = parseStationToken(t);
+        if (!p) { allValid = false; return t; }
+        const correct = findStationAbbrev(p.abbrev);
+        if (!correct) { allValid = false; return t; }
+        if (endpointSet.has(correct.toUpperCase())) hasEndpoint = true;
+        return correct + p.marker;
       });
 
-      if (!allValid) {
+      if (!allValid || hasEndpoint) {
         inputSkip.style.setProperty('border', '4px solid #ec1c24', 'important');
         inputSkip.dataset.invalid = 'true';
         updateConfirmButtonState();
         return;
       }
 
-      // Reconstruct the input value with corrected abbreviations
       inputSkip.value = correctedTokens.join(' ');
       inputSkip.style.setProperty('border', '4px solid #d2d2d2', 'important');
       inputSkip.dataset.invalid = '';
@@ -1312,38 +1735,35 @@
       return;
     }
 
-    // Read fresh values (one of them may have just been corrected)
-    const startVal = inputStart.value.trim();
-    const endVal = inputEnd.value.trim();
-    const otherVal = (type === 'start') ? endVal : startVal;
-    const otherInput = (type === 'start') ? inputEnd : inputStart;
+    const p = parseStationToken(val);
+    const bare = p ? p.abbrev : val;
+    const marker = p ? p.marker : '';
 
-    // Check existence and auto‑correct case for THIS field
-    const exists = findStationAbbrev(val);
+    const exists = findStationAbbrev(bare);
     if (!exists) {
       input.style.setProperty('border', '4px solid #ec1c24', 'important');
       input.dataset.invalid = 'true';
       updateConfirmButtonState();
       return;
     }
-    input.value = exists;                       // correct case
+    input.value = exists + marker;
     input.style.setProperty('border', '4px solid #d2d2d2', 'important');
     input.dataset.invalid = '';
 
-    // Now also correct the OTHER field if it has a value
-    if (otherVal && inputLineData) {
-      const otherCorrect = findStationAbbrev(otherVal);
-      if (otherCorrect) {
-        otherInput.value = otherCorrect;    // correct case in other field
+    const otherInput = (type === 'start') ? inputEnd : inputStart;
+    const otherRaw = otherInput.value.trim();
+    if (otherRaw && inputLineData) {
+      const op = parseStationToken(otherRaw);
+      if (op) {
+        const otherCorrect = findStationAbbrev(op.abbrev);
+        if (otherCorrect) otherInput.value = otherCorrect + op.marker;
       }
     }
 
-    // After both fields have proper case, evaluate the whole route
-    const newStartVal = inputStart.value.trim();
-    const newEndVal = inputEnd.value.trim();
+    const newStartVal = inputStart.value.trim().replace(/[.!]$/, '');
+    const newEndVal = inputEnd.value.trim().replace(/[.!]$/, '');
 
     if (newStartVal && newEndVal && inputLineData) {
-      // Check if start and destination are identical
       if (newStartVal.toLowerCase() === newEndVal.toLowerCase()) {
         inputStart.style.setProperty('border', '4px solid #ec1c24', 'important');
         inputStart.dataset.invalid = 'true';
@@ -1359,11 +1779,25 @@
         inputStart.dataset.invalid = 'true';
         inputEnd.style.setProperty('border', '4px solid #ec1c24', 'important');
         inputEnd.dataset.invalid = 'true';
-      } else {
-        inputStart.style.setProperty('border', '4px solid #d2d2d2', 'important');
-        inputStart.dataset.invalid = '';
-        inputEnd.style.setProperty('border', '4px solid #d2d2d2', 'important');
-        inputEnd.dataset.invalid = '';
+        updateConfirmButtonState();
+        return;
+      }
+
+      inputStart.style.setProperty('border', '4px solid #d2d2d2', 'important');
+      inputStart.dataset.invalid = '';
+      inputEnd.style.setProperty('border', '4px solid #d2d2d2', 'important');
+      inputEnd.dataset.invalid = '';
+
+      // Reject "!" on the end field when the end IS the true terminus.
+      if (type === 'end' && inputEnd.value.trim().endsWith('!')) {
+        const dirInfo = getDirectionInfo(inputLineData, newStartVal, newEndVal);
+        if (dirInfo) {
+          const trueTerminus = dirInfo.fullOrdered[dirInfo.fullOrdered.length - 1];
+          if (trueTerminus && trueTerminus.abbrev.toLowerCase() === newEndVal.toLowerCase()) {
+            inputEnd.style.setProperty('border', '4px solid #ec1c24', 'important');
+            inputEnd.dataset.invalid = 'true';
+          }
+        }
       }
     }
 
@@ -1378,10 +1812,133 @@
     return found ? found.abbrev : null;
   }
 
+  function parseStationToken(token) {
+    if (!token) return null;
+    const m = String(token).trim().match(/^([A-Za-z]+)([.!]?)$/);
+    if (!m) return null;
+    return { abbrev: m[1], marker: m[2] };
+  }
+
+  function getDirectionInfo(lineData, startAbbrev, endAbbrev) {
+    const startStation = lineData.stations.find(s => s.abbrev.toLowerCase() === startAbbrev.toLowerCase());
+    const endStation = lineData.stations.find(s => s.abbrev.toLowerCase() === endAbbrev.toLowerCase());
+    if (!startStation || !endStation) return null;
+    const startIdx = lineData.stations.indexOf(startStation);
+    const endIdx = lineData.stations.indexOf(endStation);
+    const dir = startIdx < endIdx ? 1 : 2;
+    const filtered = lineData.stations.filter(s =>
+      s.directionPresence === 'both' || String(s.directionPresence) === String(dir)
+    );
+    const fullOrdered = dir === 1 ? [...filtered] : [...filtered].reverse();
+    return { dir, fullOrdered };
+  }
+
+  function getStationDisplayName(station, lang) {
+    if (!station) return '';
+    if (lang === 'en' && station.abbrev === 'HBF' && station.additionalName) {
+      return station.additionalName;
+    }
+    return station.name;
+  }
+
+  function buildRouteWarnings(endAbbrev, endMarker, segment, skippedSet, skipMarkers, fullOrdered) {
+    const warnings = new Map();
+
+    // --- Terminus-bus warning (attached to the terminus station) ---
+    if (endMarker === '!') {
+      const endPos = fullOrdered.findIndex(s => s.abbrev === endAbbrev);
+      const trueTerminus = fullOrdered[fullOrdered.length - 1];
+      if (endPos !== -1 && endPos < fullOrdered.length - 1 && trueTerminus) {
+        warnings.set(endAbbrev, { kind: 'terminus-bus', trueTerminus });
+      }
+    }
+
+    // Resolve each skip once so we can run two passes without recomputing.
+    const skips = [];
+    for (const [skipAbbrev, marker] of skipMarkers) {
+      const segIdx = segment.findIndex(s => s.abbrev === skipAbbrev);
+      if (segIdx === -1) continue;
+      const kind = marker === '.' ? 'skip-return' : (marker === '!' ? 'skip-complete' : null);
+      if (!kind) continue;
+      skips.push({ segIdx, kind, skipped: segment[segIdx] });
+    }
+
+    const findBeforeIdx = (segIdx) => {
+      let i = segIdx - 1;
+      while (i >= 0 && skippedSet.has(segment[i].abbrev)) i--;
+      return i;
+    };
+    const findAfterIdx = (segIdx) => {
+      let i = segIdx + 1;
+      while (i < segment.length && skippedSet.has(segment[i].abbrev)) i++;
+      return i;
+    };
+
+    // Pass 1: "before" warnings — attached to the station just before the skip.
+    // These take priority; the actionable "next stop is skipped" message.
+    for (const { segIdx, kind, skipped } of skips) {
+      const beforeIdx = findBeforeIdx(segIdx);
+      if (beforeIdx < 0) continue;
+      const before = segment[beforeIdx];
+      if (warnings.has(before.abbrev)) continue;
+
+      const afterIdx = findAfterIdx(segIdx);
+      const following = afterIdx < segment.length ? segment[afterIdx] : segment[segment.length - 1];
+
+      warnings.set(before.abbrev, { kind, skipped, following, position: 'before' });
+    }
+
+    // Pass 2: "after" warnings — attached to the station after the skip.
+    // Only fill stations that don't already have a warning.
+    for (const { segIdx, kind, skipped } of skips) {
+      const afterIdx = findAfterIdx(segIdx);
+      if (afterIdx >= segment.length) continue;
+      const after = segment[afterIdx];
+      if (warnings.has(after.abbrev)) continue;
+
+      warnings.set(after.abbrev, { kind, skipped, following: after, position: 'after' });
+    }
+
+    return warnings;
+  }
+
+  function buildWarningText(warning) {
+    if (!warning) return null;
+
+    const nameDe = (station) => getStationDisplayName(station, 'de');
+    const nameEn = (station) => getStationDisplayName(station, 'en');
+
+    if (warning.kind === 'terminus-bus') {
+      return {
+        de: `Bauarbeiten: Diese Fahrt endet hier! Zur Weiterfahrt Richtung ${nameDe(warning.trueTerminus)} nutzen Sie bitte den Bus-Ersatzverkehr. Weitere Informationen erhalten Sie am Bahnhof.`,
+        en: `Construction works: This train terminates here! To continue towards ${nameEn(warning.trueTerminus)}, please use the replacement bus service. More information available at the platform.`
+      };
+    }
+    if (warning.kind === 'skip-return') {
+      if (warning.position === 'after') {
+        return {
+          de: `Bauarbeiten: Dieser Zug hält nicht am Bahnhof ${nameDe(warning.skipped)}. Um diesen Bahnhof zu erreichen, steigen Sie bitte an diesem Halt aus und nutzen den Gegenzug.`,
+          en: `Construction works: This train does not stop at station ${nameEn(warning.skipped)}. To reach this station, please alight at this stop and use the opposite train.`
+        };
+      }
+      return {
+        de: `Bauarbeiten: Dieser Zug hält nicht am Bahnhof ${nameDe(warning.skipped)}. Um diesen Bahnhof zu erreichen, nutzen Sie bitte am folgenden Halt den Gegenzug.`,
+        en: `Construction works: This train does not stop at station ${nameEn(warning.skipped)}. To reach this station, please use the opposite train at the following stop.`
+      };
+    }
+    if (warning.kind === 'skip-complete') {
+      return {
+        de: `Bauarbeiten: Dieser Zug hält nicht am Bahnhof ${nameDe(warning.skipped)}. Um diesen Bahnhof zu erreichen nutzen Sie bitte den Busverkehr. Weitere Informationen auf BVG.de`,
+        en: `Construction works: This train does not stop at station ${nameEn(warning.skipped)}. To reach this station, please use the bus service. More information on BVG.de`
+      };
+    }
+    return null;
+  }
+
   if (!isRemote) {
     inputLine.addEventListener('blur', validateLine);
-    inputStart.addEventListener('blur', () => validateStation(inputStart, 'start'));
-    inputEnd.addEventListener('blur', () => validateStation(inputEnd, 'end'));
+    inputStart.addEventListener('blur', () => { validateStation(inputStart, 'start'); validateStation(inputSkip, 'skip'); });
+    inputEnd.addEventListener('blur', () => { validateStation(inputEnd, 'end'); validateStation(inputSkip, 'skip'); });
     inputSkip.addEventListener('blur', () => validateStation(inputSkip, 'skip'));
     inputLine.addEventListener('input', () => { inputLine.dataset.invalid = ''; inputLine.style.setProperty('border', '4px solid #ffffff', 'important'); updateConfirmButtonState(); });
     inputStart.addEventListener('input', () => { inputStart.dataset.invalid = ''; inputStart.style.setProperty('border', '4px solid #ffffff', 'important'); updateConfirmButtonState(); });
@@ -1471,52 +2028,55 @@
       inputEnd.style.borderColor === '#ec1c24' ||
       inputSkip.style.borderColor === '#ec1c24') return;
     const line = inputLine.value.trim();
-    const start = inputStart.value.trim();
-    const end = inputEnd.value.trim();
-    if (!line || !start || !end) return;
+    const startRaw = inputStart.value.trim().replace(/[.!]$/, '');
+    const endParsed = parseStationToken(inputEnd.value.trim());
+    const end = endParsed ? endParsed.abbrev : inputEnd.value.trim();
+    const endMarker = endParsed ? endParsed.marker : '';
+    currentEndMarker = endMarker;
+
+    if (!line || !startRaw || !end) return;
 
     try {
       lineData = await loadLineJSON(line);
     } catch (e) { return; }
     lineData.lineFile = lineData.filePath;
 
-    // Determine direction based on original index order
-    const startIdx = lineData.stations.findIndex(s => s.abbrev === start);
-    const endIdx = lineData.stations.findIndex(s => s.abbrev === end);
-    direction = startIdx < endIdx ? 1 : 2;
+    const dirInfo = getDirectionInfo(lineData, startRaw, end);
+    if (!dirInfo) return;
+    direction = dirInfo.dir;
+    const fullOrdered = dirInfo.fullOrdered;
 
-    // The chosen direction must be valid for both stations
-    const possibleDirs = getPossibleDirections(lineData.stations, start, end);
+    const possibleDirs = getPossibleDirections(lineData.stations, startRaw, end);
     if (!possibleDirs.includes(direction)) return;
 
-    // Filter stations by direction presence
-    const dirPresenceFiltered = lineData.stations.filter(s => {
-      return s.directionPresence === 'both' ||
-        String(s.directionPresence) === String(direction);
-    });
+    const dirPresenceFiltered = lineData.stations.filter(s =>
+      s.directionPresence === 'both' || String(s.directionPresence) === String(direction));
     if (dirPresenceFiltered.length === 0) return;
 
-    // Build ordered list for the chosen direction
-    const fullOrdered = direction === 1
-      ? [...dirPresenceFiltered]
-      : [...dirPresenceFiltered].reverse();
-
-    const startPos = fullOrdered.findIndex(s => s.abbrev === start);
+    const startPos = fullOrdered.findIndex(s => s.abbrev === startRaw);
     const endPos = fullOrdered.findIndex(s => s.abbrev === end);
-    if (startPos === -1 || endPos === -1) return;
-    if (startPos === endPos) return;
+    if (startPos === -1 || endPos === -1 || startPos === endPos) return;
 
     const segment = fullOrdered.slice(startPos, endPos + 1);
 
-    const skipRaw = inputSkip.value.trim();
-    const skippedSet = new Set(skipRaw ? skipRaw.split(/\s+/) : []);
-    routeStations = segment.filter(s => !skippedSet.has(s.abbrev));
+    const skipTokens = inputSkip.value.trim().split(/\s+/).filter(t => t);
+    const skippedSet = new Set();
+    const skipMarkers = new Map();
+    for (const t of skipTokens) {
+      const p = parseStationToken(t);
+      if (!p) continue;
+      skippedSet.add(p.abbrev);
+      if (p.marker) skipMarkers.set(p.abbrev, p.marker);
+    }
 
-    if (!routeStations.find(s => s.abbrev === start) ||
+    routeStations = segment.filter(s => !skippedSet.has(s.abbrev));
+    if (!routeStations.find(s => s.abbrev === startRaw) ||
       !routeStations.find(s => s.abbrev === end)) return;
 
-    currentRouteIndex = routeStations.findIndex(s => s.abbrev === start);
+    currentRouteIndex = routeStations.findIndex(s => s.abbrev === startRaw);
     if (currentRouteIndex === -1) currentRouteIndex = 0;
+
+    routeWarnings = buildRouteWarnings(end, endMarker, segment, skippedSet, skipMarkers, fullOrdered);
 
     // Preserve open doors AND the closing state; otherwise reset to normal.
     if (phase !== 'doorReleased' && phase !== 'closing') {
@@ -1552,6 +2112,8 @@
     if (nextStationPage1) nextStationPage1.style.transform = '';
     if (nextStationPage2) nextStationPage2.style.transform = '';
     window._segmentColors = null; window._arrowColor = null;
+    routeWarnings = new Map();
+    currentEndMarker = '';
     hideLiveConnections();
     clearAllTimers(doorPhaseActive);
 
@@ -1608,6 +2170,8 @@
     if (nextStationPage1) nextStationPage1.style.transform = '';
     if (nextStationPage2) nextStationPage2.style.transform = '';
     window._segmentColors = null; window._arrowColor = null;
+    routeWarnings = new Map();
+    currentEndMarker = '';
     hideLiveConnections();
     clearAllTimers(doorPhaseActive);
 
@@ -2676,7 +3240,7 @@
             fillColor = isU4 ? '#252525' : null;
           }
         } else if (label === 'dots-white') {
-          fillColor = config.appearance === 'dark' ? '#0c0c0c' : '#f3f3f3';
+          fillColor = config.appearance === 'dark' ? '#000000' : '#f3f3f3';
         } else if (label === 'gray') {
           fillColor = config.appearance === 'dark' ? '#585858' : null;
         } else {
@@ -3218,7 +3782,7 @@
     return seg;
   }
 
-  async function applyRemoteRoute(lineFile, start, end, skip, currentIdx) {
+  async function applyRemoteRoute(lineFile, start, end, skip, currentIdx, endMarker) {
     try {
       lineData = await loadJSON(`data/lines/${lineFile}.json`);
     } catch (e) { return; }
@@ -3249,12 +3813,26 @@
 
     const segment = fullOrdered.slice(startPos, endPos + 1);
 
-    const skipRaw = skip ? String(skip).trim() : '';
-    const skippedSet = new Set(skipRaw ? skipRaw.split(/\s+/) : []);
+    // Parse the skip tokens with markers, same as confirmRoute.
+    const skipTokens = (skip ? String(skip).trim() : '').split(/\s+/).filter(t => t);
+    const skippedSet = new Set();
+    const skipMarkers = new Map();
+    for (const t of skipTokens) {
+      const p = parseStationToken(t);
+      if (!p) continue;
+      skippedSet.add(p.abbrev);
+      if (p.marker) skipMarkers.set(p.abbrev, p.marker);
+    }
+
     routeStations = segment.filter(s => !skippedSet.has(s.abbrev));
 
     if (!routeStations.find(s => s.abbrev === start) ||
       !routeStations.find(s => s.abbrev === end)) return;
+
+    // Rebuild warnings on the pop-out side too.
+    routeWarnings = buildRouteWarnings(
+      end, endMarker || '', segment, skippedSet, skipMarkers, fullOrdered
+    );
 
     currentRouteIndex = Math.min(currentIdx, routeStations.length - 1);
     phase = 'normal';
@@ -3282,6 +3860,7 @@
       end: routeActive ? routeStations[routeStations.length - 1].abbrev : null,
       skip: routeActive ? inputSkip.value : '',
       currentIdx: routeActive ? currentRouteIndex : 0,
+      endMarker: currentEndMarker,
       config: {
         displaySide: config.displaySide,
         displayPosition: config.displayPosition,
@@ -3324,6 +3903,7 @@
       end: routeStations[routeStations.length - 1].abbrev,
       skip: inputSkip ? inputSkip.value : '',
       currentIdx: currentRouteIndex,
+      endMarker: currentEndMarker,
       config: {
         displaySide: config.displaySide,
         displayPosition: config.displayPosition,
@@ -3340,11 +3920,12 @@
     if (!routeActive) return null;
     return {
       line: lineData.line,
-      lineFile: lineData.lineFile || lineData.line,   // fallback for lines not yet re‑confirmed
+      lineFile: lineData.lineFile || lineData.line,
       start: routeStations[0].abbrev,
       end: routeStations[routeStations.length - 1].abbrev,
       skip: inputSkip ? inputSkip.value : '',
-      currentIdx: currentRouteIndex
+      currentIdx: currentRouteIndex,
+      endMarker: currentEndMarker
     };
   }
 
@@ -3356,6 +3937,8 @@
     config.appearance = cfg.appearance;
     config.showLiveConnectionsOverview = cfg.showLiveConnectionsOverview;
     config.combinedLineDesign = cfg.combinedLineDesign;
+    config.warningTextMode = cfg.warningTextMode || 'full';
+    warningTextMode = config.warningTextMode === 'half' ? 'half' : 'full';
     applyConfigUI();
   }
 
@@ -3424,6 +4007,7 @@
     if (!isRemote) updateDoorButtonAvailability();
 
     await loadConfig();
+    await loadKeybinds();
 
     try {
       localizationData = await loadJSON('data/localization/lang.json');
@@ -3432,11 +4016,11 @@
       console.error('Failed to load localization data:', e);
     }
 
-    try {
-      destinationFilter = await loadJSON('data/live_connections_destination_filter.json');
-    } catch (e) {
-      destinationFilter = {};
-    }
+    [
+      'visuals/interface/information_display/connections_overview/warning/warning_full_default.svg',
+      'visuals/interface/information_display/connections_overview/warning/warning_half_default_light.svg',
+      'visuals/interface/information_display/connections_overview/warning/warning_half_default_dark.svg'
+    ].forEach(u => { const img = new Image(); img.src = u; });
 
     if (isRemote) {
       // Remote mode: no controls, only display setup

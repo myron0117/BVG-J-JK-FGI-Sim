@@ -190,6 +190,8 @@
 
 <div class="interface-overlay" id="line-extended" style="z-index: 20;"></div>
 
+<img id="line-extended-gaps" style="position: absolute; left: 0px; top: 0px; width: 1920px; height: 1080px; z-index: 10; visibility: hidden;" src="visuals/interface/information_display/line_extended/beyond/gaps.svg">
+
 <div class="information-display-line-extended-station" style="
   left: 144px;
   ">
@@ -342,7 +344,17 @@
   <img class="information-display-live-connections-page-indicator" src="visuals/interface/information_display/connections_overview/page_indicator_1_light.svg">
   <img class="information-display-live-connections-page-indicator" src="visuals/interface/information_display/connections_overview/page_indicator_0_light.svg">
   <img class="information-display-live-connections-page-indicator" src="visuals/interface/information_display/connections_overview/page_indicator_0_light.svg">
+  <img class="information-display-live-connections-page-indicator" src="visuals/interface/information_display/connections_overview/page_indicator_0_light.svg">
+  <img class="information-display-live-connections-page-indicator" src="visuals/interface/information_display/connections_overview/page_indicator_0_light.svg">
 </div>
+
+
+
+<div class="information-display-live-connections-warning-text-full-de" style="display: none;">Anzeigetest.</div>
+<div class="information-display-live-connections-warning-text-full-en" style="display: none;">Display test.</div>
+
+<div class="information-display-live-connections-warning-text-half-de" style="display: none;">Anzeigetest.</div>
+<div class="information-display-live-connections-warning-text-half-en" style="display: none;">Display test.</div>
 
 
 
@@ -567,7 +579,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Apply route only if not already applied and not explicitly reset
             if (s.line && !routeApplied && !explicitReset) {
-                Sim.applyRemoteRoute(s.lineFile || s.line, s.start, s.end, s.skip, s.currentIdx);
+                Sim.applyRemoteRoute(s.lineFile || s.line, s.start, s.end, s.skip, s.currentIdx, s.endMarker);
                 routeApplied = true;
                 explicitReset = false;
             }
@@ -576,6 +588,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (msg.type === 'routeUpdate') {
             const s = msg.state;
+
+            if (s && s.line) {
+                Sim.applyRemoteRoute(s.lineFile || s.line, s.start, s.end, s.skip, s.currentIdx, s.endMarker);
+            }
 
             // Ignore empty routeUpdate unless it follows an explicit reset
             if (!s || !s.line) {
@@ -622,7 +638,13 @@ document.addEventListener('DOMContentLoaded', function () {
         } else if (msg.type === 'appearanceChange') {
             Sim.applyAppearance(msg.appearance);
         } else if (msg.type === 'liveConnections') {
-            Sim.showLiveConnectionsRemote(msg.pages);
+            Sim.showLiveConnectionsRemote({
+                pages: msg.pages,
+                warningText: msg.warningText,
+                isHalf: msg.isHalf,
+                pageInterval: msg.pageInterval,
+                restart: msg.restart
+            });
         } else if (msg.type === 'hideLiveConnections') {
             if (typeof Sim.hideLiveConnections === 'function') {
                 Sim.hideLiveConnections();

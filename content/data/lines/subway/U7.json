@@ -820,7 +820,7 @@
 
 
     {
-      "abbrev": "Kt", "name": "Kleistpark", "additionalName": "", "directionPresence": "both",
+      "abbrev": "Kto", "name": "Kleistpark", "additionalName": "", "directionPresence": "both",
       "exitSide":
       {
         "direction1": {"via": "left", "terminus": "left"},

@@ -122,11 +122,35 @@
             }
         },
         {
+            "id": "lang-configuration-warning-text",
+            "language":
+            {
+                "de": "Darstellung Hinweistext",
+                "en": "Display of Information Text"
+            }
+        },
+        {
             "id": "lang-configuration-allow-remote-control",
             "language":
             {
                 "de": "Fernsteuerung aktivieren?",
                 "en": "Activate Remote Control?"
+            }
+        },
+        {
+            "id": "lang-configuration-remote-control-keybinds-title",
+            "language":
+            {
+                "de": "Tastaturbelegung bearbeiten",
+                "en": "Edit keybinds"
+            }
+        },
+        {
+            "id": "lang-configuration-remote-control-keybinds-instruction",
+            "language":
+            {
+                "de": "Drücke die entsprechende Taste für folgende Steuerungsfunktion:",
+                "en": "Press the respective key for the following control function:"
             }
         }
     ],
@@ -267,6 +291,14 @@
             {
                 "de": "Stationskürzel-Listen anzeigen",
                 "en": "Show Station ID Lists"
+            }
+        },
+        {
+            "id": "configRemoteControlSettingsCancelButton",
+            "language":
+            {
+                "de": "abbrechen",
+                "en": "cancel"
             }
         }
     ]

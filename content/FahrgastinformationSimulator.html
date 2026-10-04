@@ -190,6 +190,8 @@
 
 <div class="interface-overlay" id="line-extended" style="z-index: 20;"></div>
 
+<img id="line-extended-gaps" style="position: absolute; left: 0px; top: 0px; width: 1920px; height: 1080px; z-index: 10; visibility: hidden;" src="visuals/interface/information_display/line_extended/beyond/gaps.svg">
+
 <div class="information-display-line-extended-station" style="
   left: 144px;
   ">
@@ -342,7 +344,17 @@
   <img class="information-display-live-connections-page-indicator" src="visuals/interface/information_display/connections_overview/page_indicator_1_light.svg">
   <img class="information-display-live-connections-page-indicator" src="visuals/interface/information_display/connections_overview/page_indicator_0_light.svg">
   <img class="information-display-live-connections-page-indicator" src="visuals/interface/information_display/connections_overview/page_indicator_0_light.svg">
+  <img class="information-display-live-connections-page-indicator" src="visuals/interface/information_display/connections_overview/page_indicator_0_light.svg">
+  <img class="information-display-live-connections-page-indicator" src="visuals/interface/information_display/connections_overview/page_indicator_0_light.svg">
 </div>
+
+
+
+<div class="information-display-live-connections-warning-text-full-de" style="display: none;">Anzeigetest.</div>
+<div class="information-display-live-connections-warning-text-full-en" style="display: none;">Display test.</div>
+
+<div class="information-display-live-connections-warning-text-half-de" style="display: none;">Anzeigetest.</div>
+<div class="information-display-live-connections-warning-text-half-en" style="display: none;">Display test.</div>
 
 
 
@@ -1419,13 +1431,67 @@
 
 
   <label
+  id="lang-configuration-warning-text"
+  style="
+    position: absolute;
+    display: flex;
+    left: 980px;
+    top: 610px;
+    width: 460px;
+    color: #ffffff;
+    justify-content: center;
+    font-size: 24px;
+    font-family: TransitPro;
+    font-weight: bold;
+    cursor: default;
+  ">Darstellung Hinweistext</label>
+
+<button
+  id="configWarningTextHalfButton"
+  class="buttonDefault"
+  onclick="send('')"
+  style="
+    top: 640px;
+    left: 1108px;
+    width: 96px;
+    height: 48px;
+    font-size: 24px;
+    padding-top: 2px;
+  "
+  onmouseover="this.style.backgroundColor='#D2D2D2'; this.style.color='#252525';"
+  onmouseout="this.style.backgroundColor='#FFFFFF'; this.style.color='#252525';"
+  onmousedown="this.style.backgroundColor='#252525'; this.style.color='#FFFFFF'; this.style.border='4px solid #FFFFFF'; this.style.transform='scale(1)';"
+  onmouseup="this.style.backgroundColor='#D2D2D2'; this.style.color='#252525'; this.style.border='4px solid #D2D2D2'; this.style.transform='scale(1)';"
+>50%</button>
+
+<button
+  id="configWarningTextFullButton"
+  class="buttonDefault"
+  onclick="send('')"
+  style="
+    top: 640px;
+    left: 1216px;
+    width: 96px;
+    height: 48px;
+    font-size: 24px;
+    padding-top: 2px;
+  "
+  onmouseover="this.style.backgroundColor='#D2D2D2'; this.style.color='#252525';"
+  onmouseout="this.style.backgroundColor='#FFFFFF'; this.style.color='#252525';"
+  onmousedown="this.style.backgroundColor='#252525'; this.style.color='#FFFFFF'; this.style.border='4px solid #FFFFFF'; this.style.transform='scale(1)';"
+  onmouseup="this.style.backgroundColor='#D2D2D2'; this.style.color='#252525'; this.style.border='4px solid #D2D2D2'; this.style.transform='scale(1)';"
+>100%</button>
+
+
+
+  <label
   id="lang-configuration-allow-remote-control"
   style="
     position: absolute;
     display: flex;
-    left: 960px;
+    left: 1440px;
     top: 610px;
-    width: 960px;
+    width: 460px;
     color: #ffffff;
     justify-content: center;
     font-size: 24px;
@@ -1440,7 +1506,7 @@
   onclick="send('')"
   style="
     top: 640px;
-    left: 1338px;
+    left: 1568px;
     width: 96px;
     height: 48px;
     font-size: 32px;
@@ -1458,7 +1524,7 @@
   onclick="send('')"
   style="
     top: 640px;
-    left: 1446px;
+    left: 1676px;
     width: 96px;
     height: 48px;
     font-size: 32px;
@@ -1469,6 +1535,24 @@
   onmousedown="this.style.backgroundColor='#252525'; this.style.color='#FFFFFF'; this.style.border='4px solid #FFFFFF'; this.style.transform='scale(1)';"
   onmouseup="this.style.backgroundColor='#D2D2D2'; this.style.color='#252525'; this.style.border='4px solid #D2D2D2'; this.style.transform='scale(1)';"
 >✕</button>
+
+<button
+  id="configRemoteControlSettingsButton"
+  class="buttonDefault"
+  onclick="send('')"
+  style="
+    top: 640px;
+    left: 1784px;
+    width: 48px;
+    height: 48px;
+    font-size: 32px;
+    line-height: 1.4;
+  "
+  onmouseover="this.style.backgroundColor='#D2D2D2'; this.style.color='#252525';"
+  onmouseout="this.style.backgroundColor='#FFFFFF'; this.style.color='#252525';"
+  onmousedown="this.style.backgroundColor='#252525'; this.style.color='#FFFFFF'; this.style.border='4px solid #FFFFFF'; this.style.transform='scale(1)';"
+  onmouseup="this.style.backgroundColor='#D2D2D2'; this.style.color='#252525'; this.style.border='4px solid #D2D2D2'; this.style.transform='scale(1)';"
+>⚙</button>
 
 
 
@@ -1505,6 +1589,97 @@
     font-family: TransitPro;
     cursor: default;
   ">© 2026 Myron Productions</label>
+
+
+
+
+
+<div id="configuration-remote-control-keybinds" style="display: none;">
+
+  <div style="position: absolute; left: 0px; top: 0px; width: 1920px; height: 1080px; background-color: #000000; opacity: 0.8; z-index: 200;"></div>
+
+  <div style="position: absolute; left: 600px; top: 200px; width: 720px; height: 480px; background-color: #252525; border-radius: 20px; z-index: 250;"></div>
+
+  <label id="lang-configuration-remote-control-keybinds-title"
+  style="position: absolute;
+  display: flex;
+  left: 600px;
+  top: 240px;
+  width: 720px;
+  justify-content: center;
+  z-index: 300;
+  color: #ffffff;
+  font-size: 48px;
+  font-family: TransitPro;
+  font-weight: bold;
+  font-style: italic;
+  cursor: default;">Tastaturbelegung bearbeiten</label>
+  
+  <label id="lang-configuration-remote-control-keybinds-instruction"
+  style="position: absolute;
+  display: flex;
+  left: 600px;
+  top: 320px;
+  width: 720px;
+  justify-content: center;
+  z-index: 300;
+  color: #ffffff;
+  font-size: 24px;
+  font-family: TransitPro;
+  cursor: default;">Drücke die entsprechende Taste für folgende Steuerungsfunktion:</label>
+
+  <label id="lang-configuration-remote-control-keybinds-function"
+  style="position: absolute;
+  display: flex;
+  left: 600px;
+  top: 420px;
+  width: 720px;
+  justify-content: center;
+  z-index: 300;
+  color: #ffffff;
+  font-size: 32px;
+  font-family: TransitPro;
+  font-weight: bold;
+  cursor: default;">Beschleunigung</label>
+
+  
+
+  <label id="lang-configuration-remote-control-keybinds-counter"
+  style="position: absolute;
+  display: flex;
+  left: 600px;
+  top: 550px;
+  width: 720px;
+  justify-content: center;
+  z-index: 300;
+  color: #ffffff;
+  font-size: 24px;
+  font-family: TransitPro;
+  font-weight: bold;
+  cursor: default;">1/5</label>
+
+
+
+  <button
+  id="configRemoteControlSettingsCancelButton"
+  class="buttonDefault"
+  onclick="send('')"
+  style="
+    top: 600px;
+    left: 860px;
+    width: 200px;
+    height: 48px;
+    font-size: 24px;
+    padding-top: 2px;
+    z-index: 300;
+  "
+  onmouseover="this.style.backgroundColor='#D2D2D2'; this.style.color='#252525';"
+  onmouseout="this.style.backgroundColor='#FFFFFF'; this.style.color='#252525';"
+  onmousedown="this.style.backgroundColor='#252525'; this.style.color='#FFFFFF'; this.style.border='4px solid #FFFFFF'; this.style.transform='scale(1)';"
+  onmouseup="this.style.backgroundColor='#D2D2D2'; this.style.color='#252525'; this.style.border='4px solid #D2D2D2'; this.style.transform='scale(1)';"
+  >abbrechen</button>
+
+</div>
 
 </body>
 

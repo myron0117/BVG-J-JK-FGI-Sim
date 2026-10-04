@@ -122,3 +122,59 @@
   color: #252525;
   z-index: 100;
 }
+
+
+
+
+
+.information-display-live-connections-warning-text-full-de
+{
+  position: absolute;
+  left: 50px;
+  top: 620px;
+  width: 860px;
+  font-family: TransitPro;
+  font-weight: bold;
+  font-size: 48px;
+  color: #252525;
+  z-index: 100;
+}
+
+.information-display-live-connections-warning-text-full-en
+{
+  position: absolute;
+  left: 1010px;
+  top: 620px;
+  width: 860px;
+  font-family: TransitPro;
+  font-style: italic;
+  font-size: 48px;
+  color: #252525;
+  z-index: 100;
+}
+
+.information-display-live-connections-warning-text-half-de
+{
+  position: absolute;
+  left: 80px;
+  top: 600px;
+  width: 840px;
+  font-family: TransitPro;
+  font-weight: bold;
+  font-size: 40px;
+  color: #252525;
+  z-index: 100;
+}
+
+.information-display-live-connections-warning-text-half-en
+{
+  position: absolute;
+  left: 80px;
+  top: 840px;
+  width: 840px;
+  font-family: TransitPro;
+  font-style: italic;
+  font-size: 40px;
+  color: #252525;
+  z-index: 100;
+}
