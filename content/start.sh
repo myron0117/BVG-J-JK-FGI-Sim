@@ -52,9 +52,6 @@ if ! $PYTHON_CMD -c "import keyboard, requests, websockets" >/dev/null 2>&1; the
     $PYTHON_CMD -m pip install keyboard requests websockets
 fi
 
-echo Node.js gefunden.                                 Node.js found.
-echo
-
 # --- Stop any previously running instance (only if one exists) ---
 if pgrep -f 'content/server.py' >/dev/null 2>&1; then
     echo Vorherige Instanz gefunden, wird beendet...       Previous instance found, shutting down...
@@ -125,7 +122,7 @@ if [ -f "content/control.py" ]; then
     $PYTHON_CMD content/control.py >/tmp/jjk_control.log 2>&1 &
     echo $! > /tmp/jjk_control.pid
     echo Tastatursteuerung verfügbar.                      Keyboard control available.
-    echo.
+    echo
 fi
 
 # --- Open browser ---
@@ -149,29 +146,29 @@ fi
 
 echo
 echo Drücke eine Taste, um den Simulator zu beenden.   Press any key to shut down the Simulator.
-read
+read -n 1 -s -r
 
 # --- Stop ---
 echo
-echo (0/3) Beende 'bvg-rest-6.0.2'...                  (0/3) Shutting down 'bvg-rest-6.0.2'...
+echo "(0/3) Beende 'bvg-rest-6.0.2'...                  (0/3) Shutting down 'bvg-rest-6.0.2'..."
 kill "$(cat /tmp/jjk_bvg-rest.pid)" 2>/dev/null || true
 echo
-echo (1/3) 'bvg-rest-6.0.2' wurde beendet.             (1/3) 'bvg-rest-6.0.2' was shut down.
+echo "(1/3) 'bvg-rest-6.0.2' wurde beendet.             (1/3) 'bvg-rest-6.0.2' was shut down."
 
 echo
-echo (1/3) Beende lokalen Python-Server...             (1/3) Shutting down local Python server...
+echo "(1/3) Beende lokalen Python-Server...             (1/3) Shutting down local Python server..."
 kill "$(cat /tmp/jjk_server.pid)" 2>/dev/null || true
 echo
-echo (2/3) Lokaler Python-Server wurde beendet.        (2/3) Local Python server was shut down.
+echo "(2/3) Lokaler Python-Server wurde beendet.        (2/3) Local Python server was shut down."
 
 
 
 if [ -f /tmp/jjk_control.pid ]; then
     echo
-    echo (2/3) Beende Tastatursteuerung...                 (2/3) Shutting down keyboard control...
+    echo "(2/3) Beende Tastatursteuerung...                 (2/3) Shutting down keyboard control..."
     kill "$(cat /tmp/jjk_control.pid)" 2>/dev/null || true
     echo
-    echo (3/3) Tastatursteuerung wurde beendet.            (3/3) Keyboard control was shut down.
+    echo "(3/3) Tastatursteuerung wurde beendet.            (3/3) Keyboard control was shut down."
 fi
 
 echo

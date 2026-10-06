@@ -1529,7 +1529,7 @@
                     top: 394px !important;
                     font-weight: normal !important;
                 }
-                .dark-mode #line-extended-gaps { visibility: visible !important; }
+                .dark-mode #line-extended-gaps.is-beyond { visibility: visible !important; }
             `;
         document.head.appendChild(styleEl);
       }
@@ -2125,6 +2125,8 @@
     $$('.information-display-line-simple-station-additional-name').forEach(el => el.style.visibility = 'visible');
     $$('.information-display-line-simple-station-connections-rows').forEach(el => el.style.visibility = '');
     $$('.information-display-line-extended-station', extendedContainer).forEach(el => el.remove());
+    const gapEl = document.getElementById('line-extended-gaps');
+    if (gapEl) gapEl.classList.remove('is-beyond');
     extendedArrow.style.visibility = 'hidden';
     extendedDestination.textContent = '';
 
@@ -2183,6 +2185,8 @@
     $$('.information-display-line-simple-station-additional-name').forEach(el => el.style.visibility = 'visible');
     $$('.information-display-line-simple-station-connections-rows').forEach(el => el.style.visibility = '');
     $$('.information-display-line-extended-station', extendedContainer).forEach(el => el.remove());
+    const gapEl = document.getElementById('line-extended-gaps');
+    if (gapEl) gapEl.classList.remove('is-beyond');
     extendedArrow.style.visibility = 'hidden';
     extendedDestination.textContent = '';
 
@@ -3012,6 +3016,10 @@
 
     $$('.information-display-line-extended-station', extendedContainer).forEach(el => el.remove());
 
+    // NEW: mark the gap element so the dark-mode CSS can gate on it.
+    const gapEl = document.getElementById('line-extended-gaps');
+    if (gapEl) gapEl.classList.toggle('is-beyond', total > 18);
+
     if (total <= 18) {
       renderStandardExtended(currentIdx, total);
     } else {
@@ -3511,7 +3519,7 @@
         if (item === 'ramp') {
           amenitiesHTML += '<img src="visuals/interface/information_display/exit_details/ramp.svg" class="information-display-exits-connections-exitrow-item">';
         } else if (item === 'WC') {
-          amenitiesHTML += '<img src="visuals/interface/information_display/exit_details/WC.svg" class="information-display-exits-connections-exitrow-item">';
+          amenitiesHTML += '<img src="visuals/interface/information_display/exit_details/wc.svg" class="information-display-exits-connections-exitrow-item">';
         } else if (item === 'infocenter') {
           amenitiesHTML += '<img src="visuals/interface/information_display/exit_details/info_desk.svg" class="information-display-exits-connections-exitrow-item">';
         } else if (item.startsWith('lift')) {
@@ -3543,7 +3551,7 @@
       if (item === 'ramp') {
         centerHTML += '<img src="visuals/interface/information_display/exit_details/ramp.svg" class="information-display-exits-connections-exitrow-item">';
       } else if (item === 'WC') {
-        centerHTML += '<img src="visuals/interface/information_display/exit_details/WC.svg" class="information-display-exits-connections-exitrow-item">';
+        centerHTML += '<img src="visuals/interface/information_display/exit_details/wc.svg" class="information-display-exits-connections-exitrow-item">';
       } else if (item === 'infocenter') {
         centerHTML += '<img src="visuals/interface/information_display/exit_details/info_desk.svg" class="information-display-exits-connections-exitrow-item">';
       } else if (item.startsWith('lift')) {
