@@ -1493,12 +1493,12 @@
         "direction2": {"via": "", "terminus": "random"}
       },
       "connectingServices":
-      {"lineSimple": [["bus", "flughafen"], []], "lineExtended": [["bus", "flughafen"], [], []]},
+      {"lineSimple": [[], []], "lineExtended": [[], [], []]},
       "stationExits":
       {
         "direction1":
         {
-          "frontEnd": [["exit", "B-F"], ["bus", "flughafen"]],
+          "frontEnd": [["exit", "B-F"], []],
           "frontUp": [[], []],
           "frontMiddle": [["exit", "lift1"], []],
           "middleUp": [[], []],
@@ -1514,7 +1514,7 @@
           "middleUp": [[], []],
           "backMiddle": [["exit", "lift1"], []],
           "backUp": [[], []],
-          "backEnd": [["exit", "B-F"], ["bus", "flughafen"]]
+          "backEnd": [["exit", "B-F"], []]
         }
       },
       "apiID": "900083201"

@@ -272,7 +272,7 @@
         "direction2": {"via": "left", "terminus": "left"}
       },
       "connectingServices":
-      {"lineSimple": [["U2"], []], "lineExtended": [["U2"], [], []]},
+      {"lineSimple": [["U2", "jelbi"], []], "lineExtended": [["U2", "jelbi"], [], []]},
       "stationExits":
       {
         "direction1":
@@ -280,7 +280,7 @@
           "frontEnd": [[], []],
           "frontUp": [[], []],
           "frontMiddle": [[], []],
-          "middleUp": [["exit"], ["U2"]],
+          "middleUp": [["exit"], ["U2", "jelbi"]],
           "backMiddle": [[], []],
           "backUp": [[], []],
           "backEnd": [[], []]
@@ -290,7 +290,7 @@
           "frontEnd": [[], []],
           "frontUp": [[], []],
           "frontMiddle": [[], []],
-          "middleUp": [["exit"], ["U2"]],
+          "middleUp": [["exit"], ["U2", "jelbi"]],
           "backMiddle": [[], []],
           "backUp": [[], []],
           "backEnd": [[], []]
@@ -346,13 +346,13 @@
         "direction2": {"via": "", "terminus": ""}
       },
       "connectingServices":
-      {"lineSimple": [["U2", "U4"], ["jelbi"]], "lineExtended": [["U2", "U4"], ["jelbi"], []]},
+      {"lineSimple": [["U2", "U4"], []], "lineExtended": [["U2", "U4"], [], []]},
       "stationExits":
       {
         "direction1":
         {
           "frontEnd": [["exit"], []],
-          "frontUp": [["exit"], ["U2", "U4", "bus", "jelbi"]],
+          "frontUp": [["exit"], ["U2", "U4", "bus"]],
           "frontMiddle": [["exit"], []],
           "middleUp": [[], []],
           "backMiddle": [["exit", "lift"], []],
@@ -383,7 +383,7 @@
         "direction2": {"via": "right", "terminus": "right"}
       },
       "connectingServices":
-      {"lineSimple": [["U2", "U4"], ["jelbi"]], "lineExtended": [["U2", "U4"], ["jelbi"], []]},
+      {"lineSimple": [["U2", "U4"], []], "lineExtended": [["U2", "U4"], [], []]},
       "stationExits":
       {
         "direction1":
@@ -404,7 +404,7 @@
           "middleUp": [["exit"], ["U4"]],
           "backMiddle": [[], []],
           "backUp": [["exit"], ["U4"]],
-          "backEnd": [["exit"], ["U2", "jelbi"]]
+          "backEnd": [["exit"], ["U2"]]
         }
       },
       "apiID": "900056102"

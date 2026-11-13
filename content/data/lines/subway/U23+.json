@@ -450,7 +450,7 @@
 
 
     {
-      "abbrev": "MH", "name": "Anton-Wilhelm-Amo-Straße", "additionalName": "", "directionPresence": "both",
+      "abbrev": "MH", "name": "Anton-W.-Amo-Straße", "additionalName": "", "directionPresence": "both",
       "exitSide":
       {
         "direction1": {"via": "left", "terminus": "left"},
@@ -642,12 +642,12 @@
         "direction2": {"via": "right", "terminus": "right"}
       },
       "connectingServices":
-      {"lineSimple": [["U1", "U3", "U4"], ["jelbi"]], "lineExtended": [["U1", "U3"], ["U4", "jelbi"], []]},
+      {"lineSimple": [["U1", "U3", "U4"], []], "lineExtended": [["U1", "U3"], ["U4"], []]},
       "stationExits":
       {
         "direction1":
         {
-          "frontEnd": [["exit", "B"], ["U1", "U3", "U4", "bus", "jelbi"]],
+          "frontEnd": [["exit", "B"], ["U1", "U3", "U4", "bus"]],
           "frontUp": [[], []],
           "frontMiddle": [[], []],
           "middleUp": [["exit", "lift2"], []],
@@ -663,7 +663,7 @@
           "middleUp": [["exit", "lift3"], []],
           "backMiddle": [[], []],
           "backUp": [[], []],
-          "backEnd": [["exit", "A"], ["U1", "U3", "U4", "bus", "jelbi"]]
+          "backEnd": [["exit", "A"], ["U1", "U3", "U4", "bus"]]
         }
       },
       "apiID": "900056102"

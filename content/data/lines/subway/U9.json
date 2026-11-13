@@ -309,14 +309,14 @@
         "direction2": {"via": "left", "terminus": "left"}
       },
       "connectingServices":
-      {"lineSimple": [["bahn", "sbahn"], ["U2", "jelbi"]], "lineExtended": [["bahn", "sbahn"], ["U2", "jelbi"], []]},
+      {"lineSimple": [["bahn", "sbahn"], ["U2"]], "lineExtended": [["bahn", "sbahn"], ["U2"], []]},
       "stationExits":
       {
         "direction1":
         {
           "frontEnd": [["exit", "P", "Q"], []],
           "frontUp": [["exit"], ["U2"]],
-          "frontMiddle": [["exit", "lift1", "N", "O", "infocenter"], ["bahn", "sbahn", "bus", "jelbi"]],
+          "frontMiddle": [["exit", "lift1", "N", "O", "infocenter"], ["bahn", "sbahn", "bus"]],
           "middleUp": [[], []],
           "backMiddle": [[], []],
           "backUp": [[], []],
@@ -328,7 +328,7 @@
           "frontUp": [[], []],
           "frontMiddle": [[], []],
           "middleUp": [[], []],
-          "backMiddle": [["exit", "lift1", "N", "O", "infocenter"], ["bahn", "sbahn", "bus", "jelbi"]],
+          "backMiddle": [["exit", "lift1", "N", "O", "infocenter"], ["bahn", "sbahn", "bus"]],
           "backUp": [["exit"], ["U2"]],
           "backEnd": [["exit", "P", "Q"], []]
         }

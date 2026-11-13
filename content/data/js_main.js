@@ -116,6 +116,12 @@
   let currentVia = null;
   let autoCloseConsumed = false;
 
+  let directionDisplayRevealTimer = null;
+
+  let exitsIconsRevealedThisVisit = false;
+  let exitsIconsDelayTimer = null;
+  let randomViaCache = new Map();   // station abbrev -> 'left' | 'right'
+
   let liveConnectionsTimer = null;      // 10‑second timer for showing the overview
   let liveConnectionsInterval = null;   // 10‑second page cycling
   let liveConnectionsTimeInterval = null; // periodic time update
@@ -127,13 +133,24 @@
   let liveConnectionsEpoch = 0;   // bumped whenever we want in-flight work to be discarded
   let liveConnectionsCycleInterval = null;   // remembers the currently running cycle period
   let liveConnectionsVisible = false;
+  let liveConnectionsWindowActive = false;
+
+  // Per-station initial "loading" delay for the live-connections services
+  let liveConnectionsInitialDelayPlayedThisVisit = false;
+  let liveConnectionsInitialDelayTimer = null;
+
+  // Roll-in animation (30ms stagger per cell)
+  let liveConnectionsAnimationTimers = [];
+
+  // Signature of the currently displayed page, for change detection
+  let liveConnectionsLastSignature = null;
 
   let warningTextMode = 'full';                // 'full' | 'half'
   let routeWarnings = new Map();               // abbrev -> warning object
   let liveConnectionsServices = [];            // flat list of service entries
   let liveConnectionsWarningText = null;       // { de, en } | null
   let liveConnectionsIsHalf = false;
-  let liveConnectionsPageInterval = 10000;
+  let liveConnectionsPageInterval = 7000;
 
   let extendedStations = [];
   let extendedFrameFile = '';
@@ -152,6 +169,48 @@
   let keybindEditorActive = false;
   let keybindEditorIndex = 0;
   let keybindEditorDraft = null;
+
+  // ---------- simple-line flicker (cosmetic realism) ----------
+  // IRL the display occasionally loses sync for a frame or two: station names
+  // and connection icons blink out and reappear immediately. Tends to happen
+  // around phase changes (arrival, doors, departure). Everything is tunable;
+  // set SIMPLE_FLICKER_ENABLED = false to disable, or nudge the constants
+  // below if the effect feels too frequent / too rare in your simulator.
+
+  const SIMPLE_FLICKER_ENABLED = true;
+  const SIMPLE_FLICKER_DURATION_MS = 50;      // how long elements stay hidden
+
+  // Baseline: one flicker every [MIN, MAX] ms, randomized.
+  const SIMPLE_FLICKER_INTERVAL_MIN_MS = 20000;
+  const SIMPLE_FLICKER_INTERVAL_MAX_MS = 30000;
+
+  // Burst: extra flickers right after phase changes / while stopped.
+  const SIMPLE_FLICKER_BURST_CHANCE = 0.2;        // 0..1, probability per event
+  const SIMPLE_FLICKER_BURST_COUNT_MIN = 1;       // flickers per burst
+  const SIMPLE_FLICKER_BURST_COUNT_MAX = 2;
+  const SIMPLE_FLICKER_BURST_GAP_MIN_MS = 5000;   // spacing inside a burst
+  const SIMPLE_FLICKER_BURST_GAP_MAX_MS = 10000;
+
+  const SIMPLE_FLICKER_SELECTORS = [
+    '.information-display-line-simple-station-name',
+    '.information-display-line-simple-station-additional-name',
+    '.information-display-line-simple-station-connections-rows'
+  ];
+
+  const SIMPLE_FLICKER_BURST_COOLDOWN_MS = 5000;
+
+  // Cosmetic transition delays when entering/leaving the route display.
+  // Fallback → Route: brief blank (pure white/black) before the route renders.
+  // Route → Fallback: same in reverse, shorter.
+  const FALLBACK_TO_ROUTE_DELAY_MS = 800;
+  const ROUTE_TO_FALLBACK_DELAY_MS = 200;
+
+  let displayTransitionActive = false;
+
+  let simpleFlickerLoopTimer = null;
+  let simpleFlickerHideTimer = null;
+  let simpleFlickerBurstTimers = [];
+  let simpleFlickerLastBurstAt = 0;
 
   const KEYBIND_FUNCTIONS = [
     { key: 'forward', labelDe: 'Beschleunigung', labelEn: 'acceleration' },
@@ -241,6 +300,104 @@
     // doorReleased: no-op — closing is still bound to doorLock (its own key).
   }
 
+  function applySimpleFlickerHide() {
+    SIMPLE_FLICKER_SELECTORS.forEach(sel => {
+      $$(sel).forEach(el => { el.style.opacity = '0'; });
+    });
+  }
+
+  function applySimpleFlickerShow() {
+    SIMPLE_FLICKER_SELECTORS.forEach(sel => {
+      $$(sel).forEach(el => { el.style.opacity = ''; });
+    });
+  }
+
+  function doSimpleFlicker() {
+    if (!SIMPLE_FLICKER_ENABLED) return;
+    if (!routeActive) return;
+    const simple = document.getElementById('information-display-line-simple');
+    if (!simple || simple.style.visibility === 'hidden') return;   // exits overview showing
+    if (simpleFlickerHideTimer) return;                             // already mid-flicker
+
+    applySimpleFlickerHide();
+    simpleFlickerHideTimer = setTimeout(() => {
+      simpleFlickerHideTimer = null;
+      applySimpleFlickerShow();
+    }, SIMPLE_FLICKER_DURATION_MS);
+  }
+
+  function scheduleNextSimpleFlicker() {
+    if (simpleFlickerLoopTimer) { clearTimeout(simpleFlickerLoopTimer); simpleFlickerLoopTimer = null; }
+    if (!SIMPLE_FLICKER_ENABLED) return;
+    const gap = SIMPLE_FLICKER_INTERVAL_MIN_MS +
+      Math.random() * (SIMPLE_FLICKER_INTERVAL_MAX_MS - SIMPLE_FLICKER_INTERVAL_MIN_MS);
+    simpleFlickerLoopTimer = setTimeout(() => {
+      doSimpleFlicker();
+      scheduleNextSimpleFlicker();
+    }, gap);
+  }
+
+  function triggerSimpleFlickerBurst() {
+    if (!SIMPLE_FLICKER_ENABLED) return;
+
+    // Cooldown: during the 5s gong window after a forward/backward, further
+    // bursts are dropped so rapid-forwarding doesn't stack flickers.
+    const now = Date.now();
+    if (now - simpleFlickerLastBurstAt < SIMPLE_FLICKER_BURST_COOLDOWN_MS) return;
+    simpleFlickerLastBurstAt = now;
+
+    if (Math.random() > SIMPLE_FLICKER_BURST_CHANCE) return;
+    const n = SIMPLE_FLICKER_BURST_COUNT_MIN +
+      Math.floor(Math.random() *
+        (SIMPLE_FLICKER_BURST_COUNT_MAX - SIMPLE_FLICKER_BURST_COUNT_MIN + 1));
+    let delay = 0;
+    for (let i = 0; i < n; i++) {
+      delay += SIMPLE_FLICKER_BURST_GAP_MIN_MS +
+        Math.random() * (SIMPLE_FLICKER_BURST_GAP_MAX_MS - SIMPLE_FLICKER_BURST_GAP_MIN_MS);
+      const t = setTimeout(() => {
+        doSimpleFlicker();
+        simpleFlickerBurstTimers = simpleFlickerBurstTimers.filter(x => x !== t);
+      }, delay);
+      simpleFlickerBurstTimers.push(t);
+    }
+  }
+
+  function startSimpleFlickerLoop() {
+    if (!SIMPLE_FLICKER_ENABLED) return;
+    scheduleNextSimpleFlicker();
+  }
+
+  function getOrCreatePureBgOverlay(containerSelector, id) {
+    let overlay = document.getElementById(id);
+    if (!overlay) {
+      const container = document.querySelector(containerSelector);
+      if (!container) return null;
+      const cs = getComputedStyle(container);
+      if (cs.position === 'static') container.style.position = 'relative';
+      overlay = document.createElement('div');
+      overlay.id = id;
+      overlay.style.cssText =
+        'position:absolute;inset:0;z-index:2147483647;display:none;pointer-events:none;';
+      container.appendChild(overlay);
+    }
+    return overlay;
+  }
+
+  function showPureBackground() {
+    const isDark = config && config.appearance === 'dark';
+    const color = isDark ? '#000000' : '#ffffff';
+    const info = getOrCreatePureBgOverlay('.information-display', 'info-pure-bg');
+    if (info) {
+      info.style.backgroundColor = color;
+      info.style.display = 'block';
+    }
+  }
+
+  function hidePureBackground() {
+    const info = document.getElementById('info-pure-bg');
+    if (info) info.style.display = 'none';
+  }
+
   async function fetchDepartures(stationId) {
     try {
       const resp = await fetch(`http://127.0.0.1:7003/stops/${stationId}/departures?duration=60`);
@@ -250,6 +407,31 @@
       console.error('Failed to fetch departures:', e);
       return null;
     }
+  }
+
+  // Express line names ("ICE1004", "IC2045") are longer than U/S/tram/bus
+  // line names, so they start at 32px instead of the usual line-text size.
+  // Step down to 28px and 24px before giving up; compensate the drop in
+  // visual weight with 2px / 4px of downward shift, on top of a constant
+  // 10px nudge that keeps the shorter 32px text vertically centred in the
+  // row relative to the icon and destination text.
+  function resolveExpressLineName(rawLineName) {
+    const EMPTY = { text: '', fontSize: 32, offsetY: 10 };
+    if (!rawLineName) return EMPTY;
+
+    const text = String(rawLineName).replace(/\s+/g, '');
+    if (!text) return EMPTY;
+
+    // Line text is bold in both modes (no dark-mode override exists for it).
+    const WIDTH_LIMIT = 100;
+
+    let width = measureTextWidth(text, 32, 'TransitPro', 'bold');
+    if (width <= WIDTH_LIMIT) return { text, fontSize: 32, offsetY: 10 };
+
+    width = measureTextWidth(text, 28, 'TransitPro', 'bold');
+    if (width <= WIDTH_LIMIT) return { text, fontSize: 28, offsetY: 12 };
+
+    return { text, fontSize: 24, offsetY: 14 };
   }
 
   function processDepartures(departuresJson) {
@@ -263,7 +445,6 @@
     const filtered = departuresJson.departures.filter(d => {
       const product = d.line && d.line.product;
       if (!product) return false;
-      if (product === 'express' || product === 'ferry') return false;
       const name = (d.line && d.line.name) || '';
       if (product === currentProduct && name.toUpperCase() === currentLine) return false;
 
@@ -277,7 +458,7 @@
     });
 
     // 2. Product order
-    const productOrder = { regional: 1, suburban: 2, subway: 3, tram: 4, bus: 5 };
+    // const productOrder = { regional: 1, suburban: 2, subway: 3, tram: 4, bus: 5 };
 
     // 3. Group by product
     const groups = {};
@@ -290,19 +471,33 @@
     // 4. Within each product, sort by line name (custom for S‑Bahn)
     const collator = new Intl.Collator('en', { numeric: true, sensitivity: 'base' });
 
+    // const compareLineNames = (nameA, nameB, product) => {
+    //   if (product === 'suburban') {
+    //     const extract = (name) => {
+    //       const match = name.match(/(\d+)/);
+    //       if (!match) return { primary: Infinity, full: Infinity };
+    //       const full = parseInt(match[1], 10);
+    //       const primary = parseInt(match[1][0], 10);
+    //       return { primary, full };
+    //     };
+    //     const a = extract(nameA);
+    //     const b = extract(nameB);
+    //     if (a.primary !== b.primary) return a.primary - b.primary;
+    //     return a.full - b.full;
+    //   }
+    //   return collator.compare(nameA, nameB);
+    // };
+
     const compareLineNames = (nameA, nameB, product) => {
       if (product === 'suburban') {
+        // IRL sort is on the full number, not the first digit:
+        // S1 < S2 < S3 < … < S15 < S25 < S26 < …
         const extract = (name) => {
           const match = name.match(/(\d+)/);
-          if (!match) return { primary: Infinity, full: Infinity };
-          const full = parseInt(match[1], 10);
-          const primary = parseInt(match[1][0], 10);
-          return { primary, full };
+          if (!match) return Infinity;
+          return parseInt(match[1], 10);
         };
-        const a = extract(nameA);
-        const b = extract(nameB);
-        if (a.primary !== b.primary) return a.primary - b.primary;
-        return a.full - b.full;
+        return extract(nameA) - extract(nameB);
       }
       return collator.compare(nameA, nameB);
     };
@@ -350,7 +545,8 @@
 
     // 7. Flatten in product order
     const sorted = [];
-    ['regional', 'suburban', 'subway', 'tram', 'bus'].forEach(product => {
+    // Express (IC/ICE) above everything; ferry below bus.
+    ['express', 'regional', 'suburban', 'subway', 'tram', 'bus', 'ferry'].forEach(product => {
       if (groups[product]) sorted.push(...groups[product]);
     });
 
@@ -362,14 +558,111 @@
     return pages;
   }
 
+  function resolveViaForCurrentStation() {
+    if (currentVia) return currentVia;
+    const cur = routeStations[currentRouteIndex];
+    if (!cur) return '';
+    const exitSide = cur.exitSide[`direction${direction}`];
+    const isTerminus = currentRouteIndex === routeStations.length - 1;
+    let via = isTerminus && exitSide?.terminus
+      ? exitSide.terminus
+      : (exitSide?.via || '');
+    if (via === 'random') {
+      // Per-trip cache, keyed by station abbreviation. The pick survives
+      // currentVia being cleared by any code path, so early-show and arrival
+      // always agree. Cleared only on trip reset (resetRoute / resetRouteKeepInputs).
+      if (!randomViaCache.has(cur.abbrev)) {
+        randomViaCache.set(cur.abbrev, Math.random() < 0.5 ? 'left' : 'right');
+      }
+      via = randomViaCache.get(cur.abbrev);
+    }
+    currentVia = via;
+    return via;
+  }
+
+  function resetExitsIconDelay() {
+    if (exitsIconsDelayTimer) {
+      clearTimeout(exitsIconsDelayTimer);
+      exitsIconsDelayTimer = null;
+    }
+    exitsIconsRevealedThisVisit = false;
+  }
+
+  function maybeShowExitsEarly() {
+    if (!routeActive) return;
+    if (config.appearance !== 'dark') return;
+    if (phase !== 'normal') return;
+    if (!liveConnectionsWindowActive) return;
+    if (exitsTimedOut) return;
+    if (!exitsContainer) return;
+    if (exitsContainer.style.visibility === 'visible') return;   // already shown
+
+    const via = resolveViaForCurrentStation();
+    if (!shouldShowExits(via)) return;
+
+    showExitsRemote();   // works on main page and pop-outs
+  }
+
+  function resetLiveConnectionsInitialDelay() {
+    if (liveConnectionsInitialDelayTimer) {
+      clearTimeout(liveConnectionsInitialDelayTimer);
+      liveConnectionsInitialDelayTimer = null;
+    }
+    liveConnectionsInitialDelayPlayedThisVisit = false;
+    liveConnectionsLastSignature = null;
+  }
+
+  function cancelServiceAnimation() {
+    for (const t of liveConnectionsAnimationTimers) clearTimeout(t);
+    liveConnectionsAnimationTimers = [];
+  }
+
+  function startServiceAnimation() {
+    cancelServiceAnimation();
+    const lcContainer = document.getElementById('information-display-live-connections');
+    if (!lcContainer) return;
+    const rows = lcContainer.querySelectorAll('.information-display-live-connections-service');
+    if (rows.length === 0) return;
+
+    // Hide everything, then stagger-reveal: 1st at 30ms, 2nd at 60ms, …
+    rows.forEach(row => { row.style.visibility = 'hidden'; });
+    const STEP_MS = 30;
+    rows.forEach((row, i) => {
+      const t = setTimeout(() => {
+        row.style.visibility = '';
+      }, (i + 1) * STEP_MS);
+      liveConnectionsAnimationTimers.push(t);
+    });
+  }
+
+  // Stable fingerprint of one page's visible services. Minutes (rounded) are
+  // included so a minute tick counts as a change; the raw ISO timestamp is
+  // not, so small API jitter between refetches doesn't trigger animation.
+  function computePageSignature(pageIdx) {
+    const page = liveConnectionsPages[pageIdx];
+    if (!page) return 'none';
+    if (page.kind === 'warning') return 'warning';
+    if (!page.items || page.items.length === 0) return 'empty';
+    return page.items.map(d => {
+      const lineName = (d.line && d.line.name) || '';
+      const dir = d.direction || '';
+      const minutes = d.when ? Math.ceil((new Date(d.when).getTime() - Date.now()) / 60000) : 0;
+      return `${lineName}|${dir}|${minutes}`;
+    }).join('||');
+  }
+
   function startLiveConnectionsTimer() {
     if (isRemote) return;
     if (liveConnectionsTimer) clearTimeout(liveConnectionsTimer);
     liveConnectionsTimer = setTimeout(async () => {
       liveConnectionsTimer = null;
       liveConnectionsVisible = true;
+      liveConnectionsWindowActive = true;   // NEW
       await showLiveConnections();
-      if (!liveConnectionsVisible) return;
+      // NEW: keep the refresh loop alive while the window is active, even
+      // if the first fetch was empty (so service icons appear as soon as
+      // the API has content, and pop-outs stay in sync via the broadcast).
+      if (!liveConnectionsWindowActive) return;
       if (liveConnectionsRefreshInterval) clearInterval(liveConnectionsRefreshInterval);
       liveConnectionsRefreshInterval = setInterval(showLiveConnections, 2000);
     }, 10000);
@@ -383,7 +676,7 @@
     const pages = [];
     let warningText = null;
     let isHalf = false;
-    let pageInterval = 10000;
+    let pageInterval = 7000;
     const MAX_PAGES = 3;
 
     if (!warning) {
@@ -425,14 +718,16 @@
   }
 
   function startLiveConnectionsCycle(intervalMs) {
-    // No-op if we're already cycling at the same period.
     if (liveConnectionsInterval && liveConnectionsCycleInterval === intervalMs) return;
     if (liveConnectionsInterval) clearInterval(liveConnectionsInterval);
     liveConnectionsCycleInterval = intervalMs;
     liveConnectionsInterval = setInterval(() => {
       if (liveConnectionsPages.length <= 1) return;
+      // Cancel any running roll-in; the flip starts fresh.
+      cancelServiceAnimation();
       liveConnectionsCurrentPage = (liveConnectionsCurrentPage + 1) % liveConnectionsPages.length;
-      renderLiveConnectionsPage(liveConnectionsCurrentPage);
+      liveConnectionsLastSignature = computePageSignature(liveConnectionsCurrentPage);
+      renderLiveConnectionsPage(liveConnectionsCurrentPage, true);
       updatePageIndicator();
     }, intervalMs);
   }
@@ -442,7 +737,8 @@
     if (!lc || lc.style.visibility !== 'visible') return;
     refreshLiveConnectionsPlan();
     liveConnectionsCurrentPage = 0;
-    renderLiveConnectionsPage(0);
+    renderLiveConnectionsPage(0, false);
+    liveConnectionsLastSignature = computePageSignature(0);
     updatePageIndicator();
     startLiveConnectionsCycle(liveConnectionsPageInterval);
 
@@ -505,7 +801,7 @@
 
   async function showLiveConnections() {
     if (!routeActive) return;
-    if (!liveConnectionsVisible) return;
+    if (!liveConnectionsWindowActive) return;
 
     const station = routeStations[currentRouteIndex];
     const stationId = station && station.apiID;
@@ -528,7 +824,7 @@
     const plan = refreshLiveConnectionsPlan();
 
     if (liveConnectionsPages.length === 0) {
-      hideLiveConnections();
+      hideLiveConnections(true);
       return;
     }
 
@@ -536,13 +832,48 @@
       liveConnectionsCurrentPage = 0;
     }
 
-    renderLiveConnectionsPage(liveConnectionsCurrentPage);
+    // --- Animation decision ---
+    const newSignature = computePageSignature(liveConnectionsCurrentPage);
+    const contentChanged = newSignature !== liveConnectionsLastSignature;
+    liveConnectionsLastSignature = newSignature;
+
+    const firstFrame = !liveConnectionsInitialDelayPlayedThisVisit;
+    if (firstFrame) liveConnectionsInitialDelayPlayedThisVisit = true;
+
+    if (firstFrame) {
+      const firstPageIsWarning = liveConnectionsPages[0] && liveConnectionsPages[0].kind === 'warning';
+      if (firstPageIsWarning) {
+        // Warning page shows first — "processing" already had time to run.
+        renderLiveConnectionsPage(liveConnectionsCurrentPage, true);
+      } else {
+        // Hide services, reveal after delay.
+        renderLiveConnectionsPage(liveConnectionsCurrentPage, false, true);
+        const pageCount = liveConnectionsPages.length;
+        const delayMs = liveConnectionsIsHalf ? pageCount * 500 : pageCount * 1000;
+        if (liveConnectionsInitialDelayTimer) clearTimeout(liveConnectionsInitialDelayTimer);
+        liveConnectionsInitialDelayTimer = setTimeout(() => {
+          liveConnectionsInitialDelayTimer = null;
+          startServiceAnimation();
+        }, delayMs);
+      }
+    } else if (contentChanged) {
+      if (liveConnectionsInitialDelayTimer) {
+        // Still inside the initial delay — re-render hidden, the pending
+        // delay timer will do the reveal.
+        renderLiveConnectionsPage(liveConnectionsCurrentPage, false, true);
+      } else {
+        renderLiveConnectionsPage(liveConnectionsCurrentPage, true);
+      }
+    }
+    // else: nothing changed on the current page → no re-render, no animation.
+
     updatePageIndicator();
 
     const lcContainer = document.getElementById('information-display-live-connections');
     if (lcContainer) {
       lcContainer.style.visibility = config.showLiveConnectionsOverview ? 'visible' : 'hidden';
     }
+    updateLiveConnectionsGridSrc();
 
     if (!isRemote && window.broadcastChannel) {
       window.broadcastChannel.postMessage({
@@ -550,16 +881,27 @@
         pages: liveConnectionsPages,
         warningText: liveConnectionsWarningText,
         isHalf: liveConnectionsIsHalf,
-        pageInterval: liveConnectionsPageInterval
+        pageInterval: liveConnectionsPageInterval,
+        via: resolveViaForCurrentStation()
       });
     }
 
     startLiveConnectionsCycle(plan.pageInterval);
+
+    maybeShowExitsEarly();
   }
 
-  function hideLiveConnections() {
+  function hideLiveConnections(keepWindow = false) {
     liveConnectionsEpoch++;
     liveConnectionsVisible = false;
+    liveConnectionsWindowActive = keepWindow;   // NEW — sets or clears window
+
+    cancelServiceAnimation();
+    if (liveConnectionsInitialDelayTimer) {
+      clearTimeout(liveConnectionsInitialDelayTimer);
+      liveConnectionsInitialDelayTimer = null;
+    }
+    liveConnectionsLastSignature = null;
 
     const lcContainer = document.getElementById('information-display-live-connections');
     if (lcContainer) lcContainer.style.visibility = 'hidden';
@@ -567,8 +909,12 @@
     setWarningDisplay('none');
     updateLiveConnectionsGridSrc();
 
-    if (liveConnectionsTimer) { clearTimeout(liveConnectionsTimer); liveConnectionsTimer = null; }
-    if (liveConnectionsRefreshInterval) { clearInterval(liveConnectionsRefreshInterval); liveConnectionsRefreshInterval = null; }
+    // Leaving the window: nuke everything. Staying in the window (empty pages):
+    // leave the 2s refresh loop running so we keep polling.
+    if (!keepWindow) {
+      if (liveConnectionsTimer) { clearTimeout(liveConnectionsTimer); liveConnectionsTimer = null; }
+      if (liveConnectionsRefreshInterval) { clearInterval(liveConnectionsRefreshInterval); liveConnectionsRefreshInterval = null; }
+    }
     if (liveConnectionsInterval) { clearInterval(liveConnectionsInterval); liveConnectionsInterval = null; }
     liveConnectionsCycleInterval = null;
     if (liveConnectionsTimeInterval) { clearInterval(liveConnectionsTimeInterval); liveConnectionsTimeInterval = null; }
@@ -580,16 +926,22 @@
     liveConnectionsServices = [];
     liveConnectionsWarningText = null;
     liveConnectionsIsHalf = false;
-    liveConnectionsPageInterval = 10000;
+    liveConnectionsPageInterval = 7000;
+
+    // NEW — window is still active (empty pages): fire the exits early-show now
+    if (keepWindow) maybeShowExitsEarly();
 
     if (!isRemote && window.broadcastChannel) {
-      window.broadcastChannel.postMessage({ type: 'hideLiveConnections' });
+      window.broadcastChannel.postMessage({ type: 'hideLiveConnections', keepWindow });   // NEW — propagate
     }
   }
 
-  function renderLiveConnectionsPage(pageIdx) {
+  function renderLiveConnectionsPage(pageIdx, animate = false, hideImmediately = false) {
     const lcContainer = document.getElementById('information-display-live-connections');
     if (!lcContainer) return;
+
+    // Any pending roll-in animation belongs to the previous DOM and must go.
+    cancelServiceAnimation();
 
     const page = liveConnectionsPages[pageIdx];
 
@@ -611,14 +963,25 @@
     const oldRows = lcContainer.querySelectorAll('.information-display-live-connections-service');
     oldRows.forEach(el => el.remove());
 
-    if (!page || page.kind === 'warning' || !page.items || page.items.length === 0) return;
+    if (page && page.kind !== 'warning' && page.items && page.items.length > 0) {
+      const html = buildLiveConnectionsPage(page.items);
+      const indicatorRow = lcContainer.querySelector('.information-display-live-connections-page-indicator-row');
+      if (indicatorRow) {
+        indicatorRow.insertAdjacentHTML('afterend', html);
+      } else {
+        lcContainer.insertAdjacentHTML('beforeend', html);
+      }
+    }
 
-    const html = buildLiveConnectionsPage(page.items);
-    const indicatorRow = lcContainer.querySelector('.information-display-live-connections-page-indicator-row');
-    if (indicatorRow) {
-      indicatorRow.insertAdjacentHTML('afterend', html);
-    } else {
-      lcContainer.insertAdjacentHTML('beforeend', html);
+    // --- 3. Initial-delay support: hide all freshly inserted rows. ---
+    if (hideImmediately) {
+      const rows = lcContainer.querySelectorAll('.information-display-live-connections-service');
+      rows.forEach(row => { row.style.visibility = 'hidden'; });
+    }
+
+    // --- 4. Roll-in animation. ---
+    if (animate) {
+      startServiceAnimation();
     }
   }
 
@@ -675,10 +1038,12 @@
     if (!pageServices || pageServices.length === 0) return '';
 
     const iconPositions = {
+      express: { left: '29px', top: '20px', height: '44px', iconFolder: null },
       suburban: { left: '29px', top: '20px', height: '40px', iconFolder: 'suburban_lines' },
       subway: { left: '32px', top: '21px', height: '39px', iconFolder: 'subway_lines' },
       tram: { left: '31px', top: '22px', height: '40px', iconFolder: null },
       bus: { left: '29px', top: '20px', height: '44px', iconFolder: null },
+      ferry: { left: '29px', top: '20px', height: '44px', iconFolder: null },
     };
 
     const tops = [580, 662, 746, 830, 914, 998];
@@ -701,7 +1066,7 @@
       if (idx >= 12) return;
       const product = d.line && d.line.product;
       const lineName = (d.line && d.line.name) || '';
-      const direction = filterDestinationText(d.direction || '');
+      const dest = resolveDestinationText(d.direction || '');
       const when = d.when || '';
       const minutes = when ? Math.ceil((new Date(when).getTime() - Date.now()) / 60000) : 0;
       const pos = layout[idx];   // <-- layout coordinates
@@ -713,7 +1078,7 @@
                     <div class="information-display-live-connections-service-regional-line">${lineName}</div>
                     <img class="information-display-live-connections-service-icon" src="" style="display:none;">
                     <div class="information-display-live-connections-service-line" style="display:none;"></div>
-                    <div class="information-display-live-connections-service-destination">${direction}</div>
+                    <div class="information-display-live-connections-service-destination" style="font-size:${dest.fontSize}px;${dest.offsetY ? ` transform:translateY(${dest.offsetY}px);` : ''}">${dest.text}</div>
                     <div class="information-display-live-connections-service-time" data-when="${when}">${formatLiveMinutes(minutes)}</div>
                 </div>`;
       } else if (product === 'suburban' || product === 'subway') {
@@ -725,7 +1090,7 @@
                     <div class="information-display-live-connections-service-regional-line" style="display:none;"></div>
                     <img class="information-display-live-connections-service-icon" src="${iconSrc}" style="left:${ico.left}; top:${ico.top}; height:${ico.height};">
                     <div class="information-display-live-connections-service-line" style="display:none;"></div>
-                    <div class="information-display-live-connections-service-destination">${direction}</div>
+                    <div class="information-display-live-connections-service-destination" style="font-size:${dest.fontSize}px;${dest.offsetY ? ` transform:translateY(${dest.offsetY}px);` : ''}">${dest.text}</div>
                     <div class="information-display-live-connections-service-time" data-when="${when}">${formatLiveMinutes(minutes)}</div>
                 </div>`;
       } else if (product === 'tram' || product === 'bus') {
@@ -737,7 +1102,30 @@
                     <div class="information-display-live-connections-service-regional-line" style="display:none;"></div>
                     <img class="information-display-live-connections-service-icon" src="${iconSrc}" style="left:${ico.left}; top:${ico.top}; height:${ico.height};">
                     <div class="information-display-live-connections-service-line">${lineName}</div>
-                    <div class="information-display-live-connections-service-destination">${direction}</div>
+                    <div class="information-display-live-connections-service-destination" style="font-size:${dest.fontSize}px;${dest.offsetY ? ` transform:translateY(${dest.offsetY}px);` : ''}">${dest.text}</div>
+                    <div class="information-display-live-connections-service-time" data-when="${when}">${formatLiveMinutes(minutes)}</div>
+                </div>`;
+      } else if (product === 'express') {
+        const ico = iconPositions.express;
+        const lineInfo = resolveExpressLineName(lineName);
+        html += `
+                <div class="information-display-live-connections-service" style="left:${pos.left}; top:${pos.top};">
+                    <div class="information-display-live-connections-service-regional-box" style="display:none;"></div>
+                    <div class="information-display-live-connections-service-regional-line" style="display:none;"></div>
+                    <img class="information-display-live-connections-service-icon" src="visuals/service_icons/fernverkehr.svg" style="left:${ico.left}; top:${ico.top}; height:${ico.height};">
+                    <div class="information-display-live-connections-service-line" style="font-size:${lineInfo.fontSize}px; transform:translateY(${lineInfo.offsetY}px);">${lineInfo.text}</div>
+                    <div class="information-display-live-connections-service-destination" style="font-size:${dest.fontSize}px;${dest.offsetY ? ` transform:translateY(${dest.offsetY}px);` : ''}">${dest.text}</div>
+                    <div class="information-display-live-connections-service-time" data-when="${when}">${formatLiveMinutes(minutes)}</div>
+                </div>`;
+      } else if (product === 'ferry') {
+        const ico = iconPositions.ferry;
+        html += `
+                <div class="information-display-live-connections-service" style="left:${pos.left}; top:${pos.top};">
+                    <div class="information-display-live-connections-service-regional-box" style="display:none;"></div>
+                    <div class="information-display-live-connections-service-regional-line" style="display:none;"></div>
+                    <img class="information-display-live-connections-service-icon" src="visuals/service_icons/ferry.svg" style="left:${ico.left}; top:${ico.top}; height:${ico.height};">
+                    <div class="information-display-live-connections-service-line">${lineName}</div>
+                    <div class="information-display-live-connections-service-destination" style="font-size:${dest.fontSize}px;${dest.offsetY ? ` transform:translateY(${dest.offsetY}px);` : ''}">${dest.text}</div>
                     <div class="information-display-live-connections-service-time" data-when="${when}">${formatLiveMinutes(minutes)}</div>
                 </div>`;
       }
@@ -745,24 +1133,41 @@
     return html;
   }
 
-  function filterDestinationText(rawText) {
-    if (!rawText) return '';
+  function resolveDestinationText(rawText) {
+    if (!rawText) return { text: '', fontSize: DESTINATION_FONT_SIZE_PX, offsetY: 0 };
+
     let text = String(rawText);
 
-    // Always remove the unconditionally-stripped substrings.
+    // Permanent removals always apply, regardless of the final size.
     for (const token of DESTINATION_ALWAYS_REMOVE) {
       text = text.split(token).join('');
     }
     text = text.trim();
 
-    // Measure with the weight actually used by the current appearance.
     const isDark = config && config.appearance === 'dark';
     const fontWeight = isDark ? 'normal' : 'bold';
-    const width = measureTextWidth(text, DESTINATION_FONT_SIZE_PX, 'TransitPro', fontWeight);
 
-    if (width <= DESTINATION_MAX_WIDTH_PX) return text;
+    // Step 1 — base size (40px)
+    let width = measureTextWidth(text, DESTINATION_FONT_SIZE_PX, 'TransitPro', fontWeight);
+    if (width <= DESTINATION_MAX_WIDTH_PX) {
+      return { text, fontSize: DESTINATION_FONT_SIZE_PX, offsetY: 0 };
+    }
 
-    // Too wide: find the earliest crop-token match and cut from there.
+    // Step 2 — first reduction (36px); nudge down 2px to stay visually centred.
+    width = measureTextWidth(text, 36, 'TransitPro', fontWeight);
+    if (width <= DESTINATION_MAX_WIDTH_PX) {
+      return { text, fontSize: 36, offsetY: 2 };
+    }
+
+    // Step 3 — second (last) reduction (32px); nudge down 4px.
+    width = measureTextWidth(text, 32, 'TransitPro', fontWeight);
+    if (width <= DESTINATION_MAX_WIDTH_PX) {
+      return { text, fontSize: 32, offsetY: 4 };
+    }
+
+    // Step 4 — fallback: crop at the earliest separator. Rendered at 32px with
+    // a 4px offset; may still overflow (same "return as-is" behaviour as before,
+    // pending documentation of the real system).
     let earliestIdx = -1;
     for (const pattern of DESTINATION_CROP_PATTERNS) {
       const m = pattern.exec(text);
@@ -770,14 +1175,10 @@
         earliestIdx = m.index;
       }
     }
-
     if (earliestIdx > 0) {
       text = text.substring(0, earliestIdx).trim();
     }
-
-    // If no crop token was found, the text is returned as-is and may overflow —
-    // this is intentional pending documentation of the real system's behaviour.
-    return text;
+    return { text, fontSize: 32, offsetY: 4 };
   }
 
   function liveConnectionsGridSrc() {
@@ -812,24 +1213,74 @@
   }
 
   function showLiveConnectionsRemote(payload) {
-    const { pages, warningText, isHalf, pageInterval, restart } = payload || {};
+    const { pages, warningText, isHalf, pageInterval, restart, via } = payload || {};
     if (!pages || pages.length === 0) {
-      hideLiveConnections();
+      hideLiveConnections(true);
       return;
     }
+
+    // NEW — adopt the main page's via so early-show and arrival agree.
+    // The keybind override still wins on arrival because it fires
+    // shortBeforeStop *after* this in the same message loop.
+    if (via === 'left' || via === 'right' || via === 'both') {
+      currentVia = via;
+    }
+
+    liveConnectionsVisible = true;
+    liveConnectionsWindowActive = true;
 
     liveConnectionsPages = pages;
     liveConnectionsWarningText = warningText || null;
     liveConnectionsIsHalf = !!isHalf;
-    liveConnectionsPageInterval = pageInterval || 10000;
+    liveConnectionsPageInterval = pageInterval || 7000;
 
     if (restart) {
+      // Config-driven (warning-mode change). Re-render immediately, no animation,
+      // and don't re-trigger the initial delay — the pop-out already saw the station.
+      if (liveConnectionsInitialDelayTimer) {
+        clearTimeout(liveConnectionsInitialDelayTimer);
+        liveConnectionsInitialDelayTimer = null;
+      }
+      liveConnectionsInitialDelayPlayedThisVisit = true;
+      cancelServiceAnimation();
       liveConnectionsCurrentPage = 0;
-    } else if (liveConnectionsCurrentPage >= liveConnectionsPages.length) {
-      liveConnectionsCurrentPage = 0;
+      renderLiveConnectionsPage(0, false);
+      liveConnectionsLastSignature = computePageSignature(0);
+    } else {
+      if (liveConnectionsCurrentPage >= liveConnectionsPages.length) {
+        liveConnectionsCurrentPage = 0;
+      }
+
+      const newSignature = computePageSignature(liveConnectionsCurrentPage);
+      const contentChanged = newSignature !== liveConnectionsLastSignature;
+      liveConnectionsLastSignature = newSignature;
+
+      const firstFrame = !liveConnectionsInitialDelayPlayedThisVisit;
+      if (firstFrame) liveConnectionsInitialDelayPlayedThisVisit = true;
+
+      if (firstFrame) {
+        const firstPageIsWarning = liveConnectionsPages[0] && liveConnectionsPages[0].kind === 'warning';
+        if (firstPageIsWarning) {
+          renderLiveConnectionsPage(liveConnectionsCurrentPage, true);
+        } else {
+          renderLiveConnectionsPage(liveConnectionsCurrentPage, false, true);
+          const pageCount = liveConnectionsPages.length;
+          const delayMs = liveConnectionsIsHalf ? pageCount * 500 : pageCount * 1000;
+          if (liveConnectionsInitialDelayTimer) clearTimeout(liveConnectionsInitialDelayTimer);
+          liveConnectionsInitialDelayTimer = setTimeout(() => {
+            liveConnectionsInitialDelayTimer = null;
+            startServiceAnimation();
+          }, delayMs);
+        }
+      } else if (contentChanged) {
+        if (liveConnectionsInitialDelayTimer) {
+          renderLiveConnectionsPage(liveConnectionsCurrentPage, false, true);
+        } else {
+          renderLiveConnectionsPage(liveConnectionsCurrentPage, true);
+        }
+      }
     }
 
-    renderLiveConnectionsPage(liveConnectionsCurrentPage);
     updatePageIndicator();
 
     const lcContainer = document.getElementById('information-display-live-connections');
@@ -837,6 +1288,8 @@
     updateLiveConnectionsGridSrc();
 
     startLiveConnectionsCycle(liveConnectionsPageInterval);
+
+    maybeShowExitsEarly();
   }
 
   function playSound(audio) {
@@ -1312,8 +1765,8 @@
 
 
     const srcMap = {
-      1: 'visuals/interface/information_display/fallback_layer/bvg_logo.svg',
-      2: 'visuals/interface/information_display/fallback_layer/network_map.svg',
+      1: 'visuals/interface/information_display/fallback_layer/network_map.svg',
+      2: 'visuals/interface/information_display/fallback_layer/bvg_logo.svg',
       3: 'visuals/interface/information_display/fallback_layer/feedback_j.svg',
       4: 'visuals/interface/information_display/fallback_layer/fahrinfo_app.svg'
     };
@@ -1347,6 +1800,19 @@
       }
     }
 
+    // Keep early-show exits in sync with the current appearance, phase, via,
+    // display side and display position. Always re-populate while visible so
+    // the position toggle takes effect immediately.
+    if (phase === 'normal' && liveConnectionsWindowActive && !exitsTimedOut) {
+      const via = resolveViaForCurrentStation();
+      const wantShow = config.appearance === 'dark' && shouldShowExits(via);
+      if (wantShow) {
+        showExitsRemote();
+      } else if (exitsContainer.style.visibility === 'visible') {
+        hideExitsRemote();
+      }
+    }
+
     const lcContainer = document.getElementById('information-display-live-connections');
     if (lcContainer) {
       // The overview is "active" when the page‑cycling interval is running
@@ -1365,11 +1831,13 @@
     const isDark = config.appearance === 'dark';
     document.body.classList.toggle('dark-mode', isDark);
     toggleDarkModeStyles(isDark);
+    if (displayTransitionActive) showPureBackground();
 
     const lcEl = document.getElementById('information-display-live-connections');
     if (lcEl && lcEl.style.visibility === 'visible') {
       refreshLiveConnectionsPlan();
-      renderLiveConnectionsPage(liveConnectionsCurrentPage);
+      renderLiveConnectionsPage(liveConnectionsCurrentPage, false);
+      liveConnectionsLastSignature = computePageSignature(liveConnectionsCurrentPage);
       updatePageIndicator();
     }
 
@@ -2022,7 +2490,8 @@
     }
   }
 
-  async function confirmRoute() {
+  async function confirmRoute(forceInstant = false) {
+    if (displayTransitionActive) return;
     if (inputLine.style.borderColor === '#ec1c24' ||
       inputStart.style.borderColor === '#ec1c24' ||
       inputEnd.style.borderColor === '#ec1c24' ||
@@ -2078,12 +2547,25 @@
 
     routeWarnings = buildRouteWarnings(end, endMarker, segment, skippedSet, skipMarkers, fullOrdered);
 
+    const wasRouteActive = routeActive;
+    const playTransition = !wasRouteActive && !forceInstant;
+
+    if (playTransition) {
+      displayTransitionActive = true;
+      showPureBackground();
+      // NOTE: no await here. The pure bg only covers the info display, so the
+      // direction display updates below are visible immediately. We wait at
+      // the end instead, right before hiding the overlay.
+    }
+
     // Preserve open doors AND the closing state; otherwise reset to normal.
     if (phase !== 'doorReleased' && phase !== 'closing') {
       phase = 'normal';
     }
     routeActive = true;
     exitsTimedOut = false;
+    resetExitsIconDelay();
+    resetLiveConnectionsInitialDelay();
     clearRoutingTimers();
 
     // Tear down anything left over from the previous route's station.
@@ -2098,9 +2580,47 @@
     updateDoorButtonAvailability();
     updateUIForActiveRoute();
     updateAllDisplays();
+
+    // Broadcast immediately so pop-outs update the direction display right
+    // away, and can start their own info-display transition in sync.
+    if (!isRemote && window.broadcastChannel && routeActive) {
+      const route = getRouteState();
+      if (route) {
+        window.broadcastChannel.postMessage({
+          type: 'routeUpdate',
+          state: route,
+          transition: playTransition ? 'fallbackToRoute' : null
+        });
+      }
+    }
+
+    if (playTransition) {
+      await new Promise(r => setTimeout(r, FALLBACK_TO_ROUTE_DELAY_MS));
+      hidePureBackground();
+      displayTransitionActive = false;
+    }
   }
 
   function resetRoute() {
+    if (displayTransitionActive) return;
+
+    const playTransition = routeActive;
+    if (playTransition) {
+      displayTransitionActive = true;
+      showPureBackground();
+    }
+
+    performResetRoute();
+
+    if (playTransition) {
+      setTimeout(() => {
+        hidePureBackground();
+        displayTransitionActive = false;
+      }, ROUTE_TO_FALLBACK_DELAY_MS);
+    }
+  }
+
+  function performResetRoute() {
     const doorPhaseActive = (phase === 'doorReleased' || phase === 'closing');
     routeActive = false;
     lineData = null;
@@ -2109,6 +2629,9 @@
     if (!doorPhaseActive) phase = 'normal';
     exitsTimedOut = false;
     currentVia = null;
+    randomViaCache.clear();
+    resetExitsIconDelay();
+    resetLiveConnectionsInitialDelay();
     if (nextStationPage1) nextStationPage1.style.transform = '';
     if (nextStationPage2) nextStationPage2.style.transform = '';
     window._segmentColors = null; window._arrowColor = null;
@@ -2161,6 +2684,25 @@
   }
 
   function resetRouteKeepInputs() {
+    if (displayTransitionActive) return;
+
+    const playTransition = routeActive;
+    if (playTransition) {
+      displayTransitionActive = true;
+      showPureBackground();
+    }
+
+    performResetRouteKeepInputs();
+
+    if (playTransition) {
+      setTimeout(() => {
+        hidePureBackground();
+        displayTransitionActive = false;
+      }, ROUTE_TO_FALLBACK_DELAY_MS);
+    }
+  }
+
+  function performResetRouteKeepInputs() {
     const doorPhaseActive = (phase === 'doorReleased' || phase === 'closing');
     routeActive = false;
     lineData = null;
@@ -2169,6 +2711,9 @@
     if (!doorPhaseActive) phase = 'normal';
     exitsTimedOut = false;
     currentVia = null;
+    randomViaCache.clear();
+    resetExitsIconDelay();
+    resetLiveConnectionsInitialDelay();
     if (nextStationPage1) nextStationPage1.style.transform = '';
     if (nextStationPage2) nextStationPage2.style.transform = '';
     window._segmentColors = null; window._arrowColor = null;
@@ -2385,8 +2930,10 @@
       if (currentRouteIndex >= routeStations.length - 1) return;
       currentRouteIndex++;
       currentVia = null;
+      resetExitsIconDelay();
+      resetLiveConnectionsInitialDelay();
       hideLiveConnections();
-      clearAllTimers();               // also cancels auto‑close timer
+      clearAllTimers();
       phase = 'normal';
       updateDoorButtonAvailability();
       // Immediately hide exits and show simple line overview
@@ -2397,6 +2944,7 @@
       exitsContainer.style.visibility = 'hidden';
       computeRouteSegmentColors();
       updateAllDisplays();
+      triggerSimpleFlickerBurst();
       return;
     }
 
@@ -2412,7 +2960,9 @@
 
     currentRouteIndex++;
     exitsTimedOut = false;
-    currentVia = null;               // <-- add this line
+    currentVia = null;
+    resetExitsIconDelay();
+    resetLiveConnectionsInitialDelay();
     hideLiveConnections();
     clearAllTimers();
     phase = 'normal';
@@ -2443,6 +2993,7 @@
     enableBtn(btnBackward);
     disableBtn(btnArrival);
     updateNavButtons();
+    triggerSimpleFlickerBurst();
   }
 
   function moveForwardNoTimer() {
@@ -2461,6 +3012,8 @@
     currentRouteIndex++;
     exitsTimedOut = false;
     currentVia = null;
+    resetExitsIconDelay();
+    resetLiveConnectionsInitialDelay();
     hideLiveConnections();
     clearAllTimers();
     phase = 'normal';
@@ -2491,6 +3044,8 @@
       if (currentRouteIndex <= 0) return;
       currentRouteIndex--;
       currentVia = null;
+      resetExitsIconDelay();
+      resetLiveConnectionsInitialDelay();
       hideLiveConnections();
       clearAllTimers();
       phase = 'normal';
@@ -2503,6 +3058,7 @@
       exitsContainer.style.visibility = 'hidden';
       computeRouteSegmentColors();
       updateAllDisplays();
+      triggerSimpleFlickerBurst();
       return;
     }
 
@@ -2519,6 +3075,8 @@
     currentRouteIndex--;
     exitsTimedOut = false;
     currentVia = null;
+    resetExitsIconDelay();
+    resetLiveConnectionsInitialDelay();
     hideLiveConnections();
     clearAllTimers();
     phase = 'normal';
@@ -2539,6 +3097,7 @@
     enableBtn(btnBackward);
     disableBtn(btnArrival);
     updateNavButtons();
+    triggerSimpleFlickerBurst();
   }
 
   function adjustStationNameScale(element) {
@@ -2560,23 +3119,12 @@
     if (forwardPendingTimer) { clearTimeout(forwardPendingTimer); forwardPendingTimer = null; }
     if (doorAutoCloseTimer) { clearTimeout(doorAutoCloseTimer); doorAutoCloseTimer = null; }
     phase = 'arrival';
+    triggerSimpleFlickerBurst();
     autoCloseConsumed = false;
     exitsTimedOut = false;
 
-    const cur = routeStations[currentRouteIndex];
-    const exitSide = cur.exitSide[`direction${direction}`];
     const isTerminus = currentRouteIndex === routeStations.length - 1;
-
-    let via;
-    if (currentVia) {
-      via = currentVia;                // remote command (or any preset)
-    } else {
-      via = isTerminus && exitSide?.terminus ? exitSide.terminus :
-        exitSide?.via || '';
-      if (via === 'random') {
-        via = Math.random() < 0.5 ? 'left' : 'right';
-      }
-    }
+    const via = resolveViaForCurrentStation();
     currentVia = via;
 
     // Exit‑side arrows (only on main page)
@@ -2631,6 +3179,7 @@
     if (forwardPendingTimer) { clearTimeout(forwardPendingTimer); forwardPendingTimer = null; }
 
     phase = 'doorReleased';
+    triggerSimpleFlickerBurst();
 
     if (doorLightbar) {
       doorLightbar.style.backgroundColor = '#58ff58';
@@ -2682,6 +3231,7 @@
   function doorLock() {
     if (phase !== 'doorReleased') return;
     phase = 'closing';
+    triggerSimpleFlickerBurst();
     if (!isRemote) {
       if (gongTimer) { clearTimeout(gongTimer); gongTimer = null; }
       if (doorBlinkInterval) { clearInterval(doorBlinkInterval); doorBlinkInterval = null; }
@@ -2744,6 +3294,11 @@
     if (alternativeType() && alternativeType() !== 'suburban') return;
     if (!routeActive) return;
     const station = routeStations[currentRouteIndex];
+
+    if (directionDisplayRevealTimer) {          // NEW
+      clearTimeout(directionDisplayRevealTimer);
+      directionDisplayRevealTimer = null;
+    }
 
     const lineSimple = station.connectingServices.lineSimple;
     const allServices = [...(lineSimple[0] || []), ...(lineSimple[1] || [])];
@@ -2896,6 +3451,7 @@
     // Final display toggles.
     nextStationDisplay.style.setProperty('display', 'flex', 'important');
     nextStationDisplay.style.setProperty('visibility', 'visible', 'important');
+    nextStationDisplay.style.opacity = '0';
     dirDestination.style.setProperty('display', 'none', 'important');
     dirDestination.style.setProperty('visibility', 'hidden', 'important');
     exitSideContainer.style.setProperty('display', 'none', 'important');
@@ -2906,6 +3462,12 @@
     // pass on each page (the helper temporarily reveals hidden pages to measure).
     applyDirectionCentering(nextStationPage1);
     applyDirectionCentering(nextStationPage2);
+
+    // NEW — 50ms of emptiness, then reveal name + connection icons.
+    directionDisplayRevealTimer = setTimeout(() => {
+      directionDisplayRevealTimer = null;
+      nextStationDisplay.style.opacity = '';
+    }, 50);
   }
 
   function fitTextToContainer(el, maxFontSize) {
@@ -3623,6 +4185,44 @@
     rightArrow.style.display = rightSideHTML.servicesHTML ? 'block' : 'none';
     leftConRow.style.display = leftSideHTML.servicesHTML ? 'flex' : 'none';
     rightConRow.style.display = rightSideHTML.servicesHTML ? 'flex' : 'none';
+
+    // Cosmetic delay: on the first show of the exits overview for this station
+    // visit, hide the three service-icon rows AND the left/right text-arrows
+    // for 1–3 s to mimic the hardware loading its service icons. Subsequent
+    // re-populations within the same visit (config toggles, dark/light switch,
+    // etc.) are immediate.
+    //
+    // The center ↑ arrow is generated inline inside centerConRow.innerHTML, so
+    // it's already covered by hiding centerConRow.
+    if (!exitsIconsRevealedThisVisit) {
+      leftConRow.style.visibility = 'hidden';
+      centerConRow.style.visibility = 'hidden';
+      rightConRow.style.visibility = 'hidden';
+      leftArrow.style.visibility = 'hidden';
+      rightArrow.style.visibility = 'hidden';
+
+      if (!exitsIconsDelayTimer) {
+        const delayMs = 1000 + Math.random() * 2000;
+        exitsIconsDelayTimer = setTimeout(() => {
+          exitsIconsDelayTimer = null;
+          exitsIconsRevealedThisVisit = true;
+          ['left', 'center', 'right'].forEach(side => {
+            const row = $(`.information-display-exits-connections-connectionrow-${side}`);
+            if (row) row.style.visibility = '';
+          });
+          const la = $('.information-display-exits-connections-connectionrow-left-arrow');
+          const ra = $('.information-display-exits-connections-connectionrow-right-arrow');
+          if (la) la.style.visibility = '';
+          if (ra) ra.style.visibility = '';
+        }, delayMs);
+      }
+    } else {
+      leftConRow.style.visibility = '';
+      centerConRow.style.visibility = '';
+      rightConRow.style.visibility = '';
+      leftArrow.style.visibility = '';
+      rightArrow.style.visibility = '';
+    }
   }
 
   // ---------- master update ----------
@@ -3790,10 +4390,21 @@
     return seg;
   }
 
-  async function applyRemoteRoute(lineFile, start, end, skip, currentIdx, endMarker) {
+  async function applyRemoteRoute(lineFile, start, end, skip, currentIdx, endMarker, transition) {
+    const wasRouteActive = routeActive;
+    const playTransition = (transition === 'fallbackToRoute') && !wasRouteActive;
+
+    if (playTransition) {
+      displayTransitionActive = true;
+      showPureBackground();
+    }
+
     try {
       lineData = await loadJSON(`data/lines/${lineFile}.json`);
-    } catch (e) { return; }
+    } catch (e) {
+      if (playTransition) { hidePureBackground(); displayTransitionActive = false; }
+      return;
+    }
 
     const stations = lineData.stations;
     const startStation = stations.find(s => s.abbrev === start);
@@ -3845,7 +4456,10 @@
     currentRouteIndex = Math.min(currentIdx, routeStations.length - 1);
     phase = 'normal';
     routeActive = true;
+    currentVia = null;
     exitsTimedOut = false;
+    resetExitsIconDelay();
+    resetLiveConnectionsInitialDelay();
     clearAllTimers();
 
     infoFallbackLayer.style.visibility = 'hidden';
@@ -3858,6 +4472,14 @@
     computeRouteSegmentColors();
     updateUIForActiveRoute();
     updateAllDisplays();
+    triggerSimpleFlickerBurst();
+
+    if (playTransition) {
+      setTimeout(() => {
+        hidePureBackground();
+        displayTransitionActive = false;
+      }, FALLBACK_TO_ROUTE_DELAY_MS);
+    }
   }
 
   function getStateSnapshot() {
@@ -3982,6 +4604,16 @@
       else simpleFrame = '1';
       loadSimpleSVG(simpleFrame);
     }
+
+    if (phase === 'normal' && liveConnectionsWindowActive && !exitsTimedOut) {
+      const via = resolveViaForCurrentStation();
+      const wantShow = appearance === 'dark' && shouldShowExits(via);
+      if (wantShow) {
+        showExitsRemote();
+      } else if (exitsContainer.style.visibility === 'visible') {
+        hideExitsRemote();
+      }
+    }
   }
 
   function setCurrentVia(via) {
@@ -4029,6 +4661,8 @@
       'visuals/interface/information_display/connections_overview/warning/warning_half_default_light.svg',
       'visuals/interface/information_display/connections_overview/warning/warning_half_default_dark.svg'
     ].forEach(u => { const img = new Image(); img.src = u; });
+
+    startSimpleFlickerLoop();
 
     if (isRemote) {
       // Remote mode: no controls, only display setup

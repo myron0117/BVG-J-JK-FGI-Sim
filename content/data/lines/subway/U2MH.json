@@ -642,12 +642,12 @@
         "direction2": {"via": "right", "terminus": "right"}
       },
       "connectingServices":
-      {"lineSimple": [["U1", "U3", "U4"], ["jelbi"]], "lineExtended": [["U1", "U3"], ["U4", "jelbi"], []]},
+      {"lineSimple": [["U1", "U3", "U4"], []], "lineExtended": [["U1", "U3"], ["U4"], []]},
       "stationExits":
       {
         "direction1":
         {
-          "frontEnd": [["exit", "B"], ["U1", "U3", "U4", "bus", "jelbi"]],
+          "frontEnd": [["exit", "B"], ["U1", "U3", "U4", "bus"]],
           "frontUp": [[], []],
           "frontMiddle": [[], []],
           "middleUp": [["exit", "lift2"], []],
@@ -663,7 +663,7 @@
           "middleUp": [["exit", "lift3"], []],
           "backMiddle": [[], []],
           "backUp": [[], []],
-          "backEnd": [["exit", "A"], ["U1", "U3", "U4", "bus", "jelbi"]]
+          "backEnd": [["exit", "A"], ["U1", "U3", "U4", "bus"]]
         }
       },
       "apiID": "900056102"
@@ -716,12 +716,12 @@
         "direction2": {"via": "right", "terminus": "right"}
       },
       "connectingServices":
-      {"lineSimple": [["bahn", "sbahn"], ["U9", "jelbi"]], "lineExtended": [["bahn", "sbahn"], ["U9", "jelbi"], []]},
+      {"lineSimple": [["bahn", "sbahn"], ["U9"]], "lineExtended": [["bahn", "sbahn"], ["U9"], []]},
       "stationExits":
       {
         "direction1":
         {
-          "frontEnd": [["exit", "N", "O", "lift1", "infocenter", "WC"], ["bahn", "sbahn", "U9", "bus", "jelbi"]],
+          "frontEnd": [["exit", "N", "O", "lift1", "infocenter", "WC"], ["bahn", "sbahn", "U9", "bus"]],
           "frontUp": [[], []],
           "frontMiddle": [["exit", "lift2"], []],
           "middleUp": [[], []],
@@ -737,7 +737,7 @@
           "middleUp": [[], []],
           "backMiddle": [["exit", "lift3"], []],
           "backUp": [[], []],
-          "backEnd": [["exit", "P", "infocenter", "WC"], ["bahn", "sbahn", "U9", "bus", "jelbi"]]
+          "backEnd": [["exit", "P", "infocenter", "WC"], ["bahn", "sbahn", "U9", "bus"]]
         }
       },
       "apiID": "900023201"

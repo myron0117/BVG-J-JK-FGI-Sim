@@ -13,12 +13,12 @@
         "direction2": {"via": "", "terminus": "left"}
       },
       "connectingServices":
-      {"lineSimple": [["U1", "U2", "U3"], ["jelbi"]], "lineExtended": [["U1", "U2"], ["U3", "jelbi"], []]},
+      {"lineSimple": [["U1", "U2", "U3"], []], "lineExtended": [["U1", "U2"], ["U3"], []]},
       "stationExits":
       {
         "direction1":
         {
-          "frontEnd": [["exit"], ["U2", "bus", "jelbi"]],
+          "frontEnd": [["exit"], ["U2", "bus"]],
           "frontUp": [["exit"], ["U3"]],
           "frontMiddle": [[], []],
           "middleUp": [["exit"], ["U3"]],
@@ -34,7 +34,7 @@
           "middleUp": [["exit"], ["U3"]],
           "backMiddle": [[], []],
           "backUp": [["exit"], ["U3"]],
-          "backEnd": [["exit"], ["U2", "bus", "jelbi"]]
+          "backEnd": [["exit"], ["U2", "bus"]]
         }
       },
       "apiID": "900056102"
