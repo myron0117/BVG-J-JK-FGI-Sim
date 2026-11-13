@@ -27,10 +27,6 @@
 
     <!-- <script src="data/js_informationDisplay/extended_line_basic_controllability.js" defer></script> -->
     <script src="data/js_informationDisplay/clock.js" defer></script>
-
-    <!-- <script src="data/js_directionDisplay/js_directionDisplay.js" defer></script> -->
-    
-    <!-- NOTE: commented out script links are empty/unused; for better development with AI assistance the scripts are inline until finished. Clock script needs no attention. -->
 </head>
 
 <body style="background-color:#252525; overflow: hidden;">
@@ -39,7 +35,7 @@
 
 <div class="information-display">
 
-<img class="information-display-fallback-layer" src="visuals/interface/information_display/fallback_layer/bvg_logo.svg" style="visibility: visible;">
+<img class="information-display-fallback-layer" src="visuals/interface/information_display/fallback_layer/network_map.svg" style="visibility: visible;">
 
 <img class="interface-overlay" src="visuals/interface/information_display/background/main_default_dark.svg">
 
@@ -802,7 +798,7 @@
 <button
   id="routeConfirmButton"
   class="buttonDefault"
-  onclick="send('confirm')"
+  onclick="send('confirm', event)"
   style="
     top: 300px;
     left: 1516px;
@@ -1373,7 +1369,7 @@
     left: 20px;
     width: 221px;
     height: 128px;
-    background-image: url('visuals/interface/information_display/fallback_layer/bvg_logo.svg');
+    background-image: url('visuals/interface/information_display/fallback_layer/network_map.svg');
     background-size: contain;
   "
   onmousedown="this.style.border='4px solid #D2D2D2';"
@@ -1389,7 +1385,7 @@
     left: 253px;
     width: 221px;
     height: 128px;
-    background-image: url('visuals/interface/information_display/fallback_layer/network_map.svg');
+    background-image: url('visuals/interface/information_display/fallback_layer/bvg_logo.svg');
     background-size: contain;
   "
   onmousedown="this.style.border='4px solid #D2D2D2';"
@@ -1728,7 +1724,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     window.send = function (action) {
         switch (action) {
-            case 'confirm':      window.Simulator.confirmRoute(); break;
+            case 'confirm':      window.Simulator.confirmRoute(event && event.shiftKey); break;
             case 'forward':
               if (event && event.shiftKey) {
                 window.Simulator.moveForwardNoTimer();

@@ -590,7 +590,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const s = msg.state;
 
             if (s && s.line) {
-                Sim.applyRemoteRoute(s.lineFile || s.line, s.start, s.end, s.skip, s.currentIdx, s.endMarker);
+                Sim.applyRemoteRoute(s.lineFile || s.line, s.start, s.end, s.skip, s.currentIdx, s.endMarker, msg.transition);
             }
 
             // Ignore empty routeUpdate unless it follows an explicit reset
@@ -647,7 +647,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         } else if (msg.type === 'hideLiveConnections') {
             if (typeof Sim.hideLiveConnections === 'function') {
-                Sim.hideLiveConnections();
+                Sim.hideLiveConnections(!!msg.keepWindow);
             }
         } else if (msg.type === 'configUpdate') {
             if (msg.config) {
