@@ -377,7 +377,7 @@
       overlay = document.createElement('div');
       overlay.id = id;
       overlay.style.cssText =
-        'position:absolute;inset:0;z-index:2147483647;display:none;pointer-events:none;';
+        'position:absolute;inset:0;z-index:200;display:none;';
       container.appendChild(overlay);
     }
     return overlay;
@@ -1580,23 +1580,13 @@
   }
 
   function normalizeKey(e) {
-    const k = e.key;
-    if (k.length === 1) return k.toLowerCase();
-    const named = {
-      ' ': 'space', 'Space': 'space',
-      'Escape': 'escape', 'Esc': 'escape',
-      'Enter': 'enter', 'Tab': 'tab',
-      'Backspace': 'backspace', 'Delete': 'delete',
-      'Insert': 'insert', 'Home': 'home', 'End': 'end',
-      'PageUp': 'page up', 'PageDown': 'page down',
-      'ArrowUp': 'up', 'ArrowDown': 'down',
-      'ArrowLeft': 'left', 'ArrowRight': 'right',
-      'PrintScreen': 'print screen',
-      'Pause': 'pause', 'ContextMenu': 'menu'
-    };
-    if (named[k]) return named[k];
-    if (/^F\d{1,2}$/.test(k)) return k.toLowerCase();
-    return k.toLowerCase();
+    // Printable single-character keys: both browser and keyboard lib reflect
+    // the current layout, so event.key is already the right value.
+    if (e.key.length === 1) return e.key.toLowerCase();
+
+    // Everything else (Insert, Home, PageUp, F-keys, arrows, ...):
+    // use the physical key code — layout-independent on both sides.
+    return 'code:' + e.code;
   }
 
   function openKeybindEditor() {

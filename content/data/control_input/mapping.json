@@ -1,6 +1,6 @@
 {
   "forward": "a",
-  "doorsLeft": "insert",
-  "doorsRight": "page up",
-  "doorClosure": "home"
+  "doorsLeft": "code:Insert",
+  "doorsRight": "code:PageUp",
+  "doorClosure": "code:Home"
 }
